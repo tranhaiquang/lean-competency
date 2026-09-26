@@ -1,0 +1,38 @@
+[
+  {
+    "timestamp": "2026-09-10T10:03:00Z",
+    "scope": "app",
+    "target": "index.html",
+    "verb": "redesign",
+    "genre": "modern-minimal",
+    "macrostructure": "Workbench",
+    "theme": "custom-indigo",
+    "nav": "N9-edge-aligned",
+    "footer": "none",
+    "stamps": [
+      "Hallmark · genre: modern-minimal · macrostructure: Workbench · theme: custom-indigo · nav: N9-edge-aligned · footer: none · designed-as-app"
+    ],
+    "files_modified": ["index.html"],
+    "files_created": ["design.md"],
+    "files_deleted": [],
+    "notes": "Full visual redesign of LEAN Competency System dashboard. Replaced raw hex colors with OKLCH tokens, IBM Plex Sans with Geist, sidebar with Workbench edge-aligned nav, added fade-up reveal, refined card surfaces. All data, auth, navigation, and rendering logic preserved."
+  },
+  {
+    "timestamp": "2026-09-23T00:00:00Z",
+    "scope": "app",
+    "target": "index.html",
+    "verb": "redesign",
+    "genre": "modern-minimal",
+    "macrostructure": "Workbench",
+    "theme": "cornflower-blue",
+    "nav": "solid-blue-sidebar",
+    "footer": "none",
+    "stamps": [
+      "Hallmark · genre: modern-minimal · macrostructure: Workbench · theme: cornflower-blue · nav: solid-blue-sidebar · footer: none · designed-as-app"
+    ],
+    "files_modified": ["index.html", "AGENTS.md", "design.md"],
+    "files_created": [],
+    "files_deleted": [],
+    "notes": "Hallmark redesign re-applied after prior attempt was lost. Cornflower #5B8DEF full accent swap (purple retired), solid blue sidebar, Geist fonts via Google Fonts, Hallmark paper tokens (#FAFBFF bg, hex format), blue level ramp #EEF4FD→#5B8DEF, orange evidence flag + active nav border kept, fade-up reveal animation, all hardcoded JS hex tokenized to CSS custom properties. Data, auth, navigation, and rendering logic untouched."
+  }
+]
