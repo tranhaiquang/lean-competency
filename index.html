@@ -4,6 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lean Competency System</title>
+<script type="module">
+// Supabase ESM glue — exposes the client on window.sb, then kicks
+// the load. Runs before the classic app script (modules are deferred).
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const sb = createClient(
+  'https://asehezvcqzmxvzedsejw.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzZWhlenZjcXpteHZ6ZWRzZWp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5ODAxOTAsImV4cCI6MjEwNjU1NjE5MH0.8UtZQtVso599-isMnT5enpejNg442UzHNhzOqva-IJA'
+);
+window.sb = sb;
+window.sbReady = true;
+if (typeof window.loadMatrixFromCloud === 'function') window.loadMatrixFromCloud();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
@@ -452,45 +464,76 @@ var SKILLS_EN = ["6S","8 Wastes","GEMBA","Time Study & ECRS","VSM","Line Balanci
 
 var AXIS = { A: "Kỹ thuật", B: "Ứng dụng", C: "Hành vi" };
 var AXIS_EN = { A: "Technical", B: "Application", C: "Behavioral" };
-var TEAMS = ["IE", "TECH/PE", "CI"];
-var TEAM_GL = { "IE": "Huỳnh Thị Tuyết Nga", "TECH/PE": "Phạm Văn Vũ", "CI": "Nguyễn Văn Tình" };
+// Teams follow employee_list.csv. 'ADMIN' and the blank-team row
+// (Nguyễn Minh Quang) are intentionally excluded from the filter —
+// see TEAM_UNASSIGNED below.
+var TEAMS = ["LEAN IE", "LEAN CI", "LEAN TPM", "LEAN TECHNOLOGY"];
+var TEAM_GL = {
+  "LEAN IE": "Vương Quốc Bảo",
+  "LEAN CI": "Nguyễn Thị Thanh Trang",
+  "LEAN TPM": "",
+  "LEAN TECHNOLOGY": "Chau Khách Huy"
+};
+// People in the CSV whose team isn't one of the LEAN_* teams.
+var TEAM_UNASSIGNED = "Other";
 
+// Roster: employee_list.csv (18 people). person_id = employee ID,
+// matching competency_matrix in Supabase. Baselines are all-null —
+// scores come from the cloud table, loaded on start.
+// Team values not in TEAMS are grouped under TEAM_UNASSIGNED:
+//   ADMIN (Nguyễn Thị Bích Liễu), blank (Nguyễn Minh Quang)
 var PEOPLE = [
-  { id: "LT001", name: "Huỳnh Thị Tuyết Nga", team: "IE", pos: "G. Leader", s: [2,2,2,3,1,2,1,1,2,2,4,null,null,4,2,2,null,2,2,2,2,2,2,2,2,2,null,null] },
-  { id: "LT002", name: "Huỳnh Thị Kim Khuya", team: "IE", pos: "Leader", s: [2,2,2,3,1,0,2,1,2,3,0,null,null,3,2,2,null,null,null,null,null,null,null,null,null,null,null] },
-  { id: "LT003", name: "Nguyễn Thị Hồng Bích", team: "IE", pos: "Leader", s: [2,2,3,3,1,0,2,1,2,3,2,null,null,3,2,2,null,2,2,2,2,2,2,2,2,2,null,null] },
-  { id: "LT004", name: "Trần Kim Hoàng", team: "IE", pos: "Leader", s: [2,2,3,3,1,3,2,2,2,1,4,null,null,0,0,0,null,null,null,null,null,null,null,null,null,null,null] },
-  { id: "LT005", name: "Hà Trung Hữu", team: "IE", pos: "Staff", s: [1,2,3,3,1,1,2,2,2,2,2,null,null,2,0,0,null,2,2,2,2,2,2,2,2,2,null,null] },
-  { id: "LT006", name: "Nguyễn Thị Ngọc Huyền", team: "IE", pos: "Staff", s: [2,2,4,3,1,1,2,1,2,2,2,null,null,1,2,0,null,2,2,2,2,2,2,2,2,2,null,null] },
-  { id: "26082902", name: "Võ Thị Thùy Linh", team: "IE", pos: "Staff", s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,0,0,null,null,null,null,null,null,null,null,null,null,null] },
-  { id: "LT007", name: "Phạm Văn Vũ", team: "TECH/PE", pos: "G. Leader", s: [2,2,3,3,1,2,2,3,2,2,3,null,null,4,2,2,null,null,null,null,null,null,null,null,null,null,null] },
-  { id: "LT008", name: "Châu Minh Khánh", team: "TECH/PE", pos: "Leader", s: [1,2,3,2,1,1,2,3,2,3,1,null,null,2,2,2,null,null,null,null,null,null,null,null,null,null,null] },
-  { id: "LT009", name: "Trần Trung Học", team: "TECH/PE", pos: "Leader", s: [2,2,0,3,1,3,2,3,2,2,4,null,null,1,2,2,null,null,null,null,null,null,null,null,null,null,null] },
-  { id: "LT010", name: "Nguyễn Hữu Thắng", team: "TECH/PE", pos: "Staff", s: [2,2,4,2,1,1,1,2,2,2,3,null,null,1,0,0,null,2,2,2,2,2,2,2,2,2,null,null] },
-  { id: "LT011", name: "Nguyễn Văn Thêm", team: "TECH/PE", pos: "Staff", s: [2,2,1,2,0,3,2,2,2,2,3,null,null,4,0,0,null,null,null,null,null,null,null,null,null,null,null] },
-  { id: "LT012", name: "Nguyễn Văn Tài", team: "TECH/PE", pos: "Staff", s: [2,2,null,3,1,null,1,3,2,1,null,null,null,null,0,0,null,null,null,null,null,null,null,null,null,null,null] },
-  { id: "LT013", name: "Ngô Chí Hoàng Sang", team: "TECH/PE", pos: "Staff", s: [2,2,4,2,1,1,2,2,2,3,1,null,null,1,0,0,null,null,null,null,null,null,null,null,null,null,null] },
-  { id: "LT014", name: "Thái Thành Hửu", team: "TECH/PE", pos: "Staff", s: [1,4,4,4,4,4,1,2,2,2,0,null,null,4,0,0,null,null,null,null,null,null,null,null,null,null,null] },
-  { id: "LT015", name: "Nguyễn Văn Tình", team: "CI", pos: "G. Leader", s: [2,2,0,2,1,0,2,2,2,2,4,null,null,2,0,0,null,null,null,null,null,null,null,null,null,null,null] },
-  { id: "LT016", name: "Nguyễn Lâm Thái Bảo", team: "CI", pos: "Leader", s: [2,2,1,3,1,4,1,2,2,2,0,null,null,1,2,0,null,2,2,2,2,2,2,2,2,2,null,null] },
-  { id: "LT017", name: "Nguyễn Thị Tuyết Nhi", team: "CI", pos: "Leader", s: [2,2,2,1,1,0,1,2,2,2,1,null,null,4,2,2,null,2,2,2,2,2,2,2,2,2,null,null] },
-  { id: "LT018", name: "Trần Ngọc Mai", team: "CI", pos: "Leader", s: [0,1,3,4,3,3,2,0,1,3,0,null,null,0,2,2,null,2,2,2,2,2,2,2,2,2,null,null] }
+  { id: "12080610", name: "Nguyễn Thị Thanh Trang", team: "LEAN CI",         pos: "G. Leader", s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
+  { id: "14052701", name: "Nguyễn Thị Bích Liễu",   team: TEAM_UNASSIGNED,  pos: "Leader",    s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
+  { id: "16031603", name: "Võ Thị Thủy Tiên",       team: "LEAN IE",         pos: "Staff",     s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
+  { id: "16111801", name: "Trần Thị Mỹ Diễm",       team: "LEAN CI",         pos: "Staff",     s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
+  { id: "21051708", name: "Chau Khách Huy",         team: "LEAN TECHNOLOGY", pos: "Leader",    s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
+  { id: "22022301", name: "Trương Thị Cẩm Tú",      team: "LEAN IE",         pos: "Staff",     s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
+  { id: "23032701", name: "Vương Quốc Bảo",         team: "LEAN IE",         pos: "G. Leader", s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
+  { id: "23040301", name: "Nguyễn Minh Quang",      team: TEAM_UNASSIGNED,  pos: "Leader",    s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
+  { id: "24031102", name: "Nguyễn Thanh Phương",    team: "LEAN TPM",        pos: "Staff",     s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
+  { id: "24091901", name: "Ngô Trần Phương Nguyên", team: "LEAN CI",         pos: "Staff",     s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
+  { id: "25040201", name: "Nguyễn Thanh Bình",      team: "LEAN CI",         pos: "Staff",     s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
+  { id: "25051501", name: "Lê Thị Hồng Vân",        team: "LEAN IE",         pos: "Staff",     s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
+  { id: "25102001", name: "Phạm Duy Hậu",           team: "LEAN TPM",        pos: "Staff",     s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
+  { id: "25102801", name: "Trần Hải Quang",         team: "LEAN TECHNOLOGY", pos: "Staff",     s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
+  { id: "25110301", name: "Nguyễn Thế Quân",        team: "LEAN CI",         pos: "Staff",     s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
+  { id: "26031603", name: "Đoàng Huỳnh Minh Trung", team: "LEAN TPM",        pos: "Staff",     s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
+  { id: "26061101", name: "Phạm Ngọc Minh",         team: "LEAN TECHNOLOGY", pos: "Staff",     s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
+  { id: "26070601", name: "Hoàng Minh Chiến",       team: "LEAN TECHNOLOGY", pos: "Staff",     s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] }
 ];
 
-var TARGET = {
-  "IE|Staff": [2,2,2,3,3,2,2,2,2,2,2,2,2,1,2,2,0,1,1,1,1,1,1,1,1,1,1,0],
-  "IE|Leader": [2,2,3,3,3,3,2,2,2,2,3,2,2,3,2,2,0,2,2,2,2,2,2,2,2,2,2,0],
-  "IE|G. Leader": [2,2,4,3,3,4,2,2,2,2,4,3,3,4,2,2,0,2,2,2,2,2,2,2,2,2,2,1],
-  "IE|Supervisor": [2,2,4,3,3,4,2,2,2,2,4,3,3,4,2,2,2,3,3,3,3,3,3,3,3,3,3,2],
-  "TECH/PE|Staff": [2,2,2,2,2,1,3,3,3,2,2,2,2,1,2,2,0,1,1,1,1,1,1,1,1,1,1,0],
-  "TECH/PE|Leader": [2,2,3,2,2,2,3,3,3,2,3,2,2,3,2,2,0,2,2,2,2,2,2,2,2,2,2,0],
-  "TECH/PE|G. Leader": [2,2,4,2,2,3,3,3,3,2,4,3,3,4,2,2,0,2,2,2,2,2,2,2,2,2,2,1],
-  "TECH/PE|Supervisor": [2,2,4,2,2,3,3,3,3,2,4,3,3,4,2,2,2,3,3,3,3,3,3,3,3,3,3,2],
-  "CI|Staff": [3,2,2,2,2,1,2,2,2,3,3,2,2,1,2,2,0,1,1,1,1,1,1,1,1,1,1,0],
-  "CI|Leader": [3,2,3,2,2,2,2,2,2,3,4,2,2,3,2,2,0,2,2,2,2,2,2,2,2,2,2,0],
-  "CI|G. Leader": [3,2,4,2,2,3,2,2,2,3,4,3,3,4,2,2,0,2,2,2,2,2,2,2,2,2,2,1],
-  "CI|Supervisor": [3,2,4,2,2,3,2,2,2,3,4,3,3,4,2,2,2,3,3,3,3,3,3,3,3,3,3,2]
-};
+// Required level per team × position. Team names remapped from the
+// old IE / TECH/PE / CI to the CSV's LEAN_* names; the level arrays
+// are carried over from the corresponding original row.
+//
+// Placeholders — no original profile existed for these; they reuse
+// the TECH/PE Staff / Leader rows until you supply real targets:
+//   LEAN TPM  (all 4 staff), ADMIN + blank team (2 people)
+var TARGET = {};
+TARGET["LEAN IE|Staff"]      = [2,2,2,3,3,2,2,2,2,2,2,2,2,1,2,2,0,1,1,1,1,1,1,1,1,1,1,0];
+TARGET["LEAN IE|Leader"]     = [2,2,3,3,3,3,2,2,2,2,3,2,2,3,2,2,0,2,2,2,2,2,2,2,2,2,2,0];
+TARGET["LEAN IE|G. Leader"]  = [2,2,4,3,3,4,2,2,2,2,4,3,3,4,2,2,0,2,2,2,2,2,2,2,2,2,2,1];
+TARGET["LEAN IE|Supervisor"] = [2,2,4,3,3,4,2,2,2,2,4,3,3,4,2,2,2,3,3,3,3,3,3,3,3,3,3,2];
+
+TARGET["LEAN CI|Staff"]      = [3,2,2,2,2,1,2,2,2,3,3,2,2,1,2,2,0,1,1,1,1,1,1,1,1,1,1,0];
+TARGET["LEAN CI|Leader"]     = [3,2,3,2,2,2,2,2,2,3,4,2,2,3,2,2,0,2,2,2,2,2,2,2,2,2,2,0];
+TARGET["LEAN CI|G. Leader"]  = [3,2,4,2,2,3,2,2,2,3,4,3,3,4,2,2,0,2,2,2,2,2,2,2,2,2,2,1];
+TARGET["LEAN CI|Supervisor"] = [3,2,4,2,2,3,2,2,2,3,4,3,3,4,2,2,2,3,3,3,3,3,3,3,3,3,3,2];
+
+TARGET["LEAN TECHNOLOGY|Staff"]      = [2,2,2,2,2,1,3,3,3,2,2,2,2,1,2,2,0,1,1,1,1,1,1,1,1,1,1,0];
+TARGET["LEAN TECHNOLOGY|Leader"]     = [2,2,3,2,2,2,3,3,3,2,3,2,2,3,2,2,0,2,2,2,2,2,2,2,2,2,2,0];
+TARGET["LEAN TECHNOLOGY|G. Leader"]  = [2,2,4,2,2,3,3,3,3,2,4,3,3,4,2,2,0,2,2,2,2,2,2,2,2,2,2,1];
+TARGET["LEAN TECHNOLOGY|Supervisor"] = [2,2,4,2,2,3,3,3,3,2,4,3,3,4,2,2,2,3,3,3,3,3,3,3,3,3,3,2];
+
+// ⚠ PLACEHOLDER — no original profile existed for LEAN TPM or the
+// unassigned team (ADMIN + blank). Reuses TECH/PE rows for now.
+TARGET["LEAN TPM|Staff"]         = [2,2,2,2,2,1,3,3,3,2,2,2,2,1,2,2,0,1,1,1,1,1,1,1,1,1,1,0];
+TARGET["LEAN TPM|Leader"]        = [2,2,3,2,2,2,3,3,3,2,3,2,2,3,2,2,0,2,2,2,2,2,2,2,2,2,2,0];
+TARGET["LEAN TPM|G. Leader"]     = [2,2,4,2,2,3,3,3,3,2,4,3,3,4,2,2,0,2,2,2,2,2,2,2,2,2,2,1];
+TARGET[TEAM_UNASSIGNED + "|Staff"]     = [2,2,2,2,2,1,3,3,3,2,2,2,2,1,2,2,0,1,1,1,1,1,1,1,1,1,1,0];
+TARGET[TEAM_UNASSIGNED + "|Leader"]    = [2,2,3,2,2,2,3,3,3,2,3,2,2,3,2,2,0,2,2,2,2,2,2,2,2,2,2,0];
+TARGET[TEAM_UNASSIGNED + "|G. Leader"] = [2,2,4,2,2,3,3,3,3,2,4,3,3,4,2,2,0,2,2,2,2,2,2,2,2,2,2,1];
 
 var LEVELS = [
   { v:0, t:"Chưa biết", d:"Chưa từng tiếp xúc với công cụ.", e:"—", who:"—", self:true },
@@ -617,16 +660,21 @@ var RANK_LABEL = {
 var SKILL_COURSE = ["FND-02","FND-01","FND-03","IE-01","IE-03","IE-02","TEC-01","TEC-02","TEC-03",
   "FND-04","CI-01","TOOL-01","TOOL-03","LDR-01",
   "LSS-YB","LSS-GB","LSS-BB","SFT-01","SFT-02","SFT-03","SFT-04","SFT-05","SFT-06","SFT-07","SFT-08","SFT-09","SFT-11",""];
+// ⚠ PLACEHOLDER — these still reference the OLD roster (LT### IDs),
+// which no longer exist in PEOPLE[]. Certification badges will show
+// for nobody. Remap to the CSV employee IDs when cert data is known.
 var COURSE_CERTS = {
-  "SFT-01,SFT-02,SFT-03,SFT-04,SFT-05,SFT-06,SFT-07,SFT-08,SFT-09": ["LT003","LT001","LT017","LT016","LT006","LT018","LT005","LT010"],
-  "LSS-GB": ["LT003","LT001","LT002","LT007","LT017","LT018","LT009","LT008"],
-  "LSS-YB": ["LT003","LT002","LT007","LT017","LT016","LT006","LT018","LT009","LT001","LT008"]
+  "SFT-01,SFT-02,SFT-03,SFT-04,SFT-05,SFT-06,SFT-07,SFT-08,SFT-09": [],
+  "LSS-GB": [],
+  "LSS-YB": []
 };
 var TIER_ORDER = ["Staff","Leader","G. Leader","Supervisor"];
+// Core-skill groupings, remapped to the CSV team names
 var CORE_SKILLS = [
-  { team:"IE", skills:"Time Study & ECRS · Line Balancing · VSM" },
-  { team:"TECH/PE", skills:"QCO · TPM · Andon" },
-  { team:"CI", skills:"KAIZEN · PDCA / A3 · VSM" }
+  { team:"LEAN IE",         skills:"Time Study & ECRS · Line Balancing · VSM" },
+  { team:"LEAN TECHNOLOGY", skills:"QCO · TPM · Andon" },
+  { team:"LEAN CI",         skills:"KAIZEN · PDCA / A3 · VSM" },
+  { team:"LEAN TPM",        skills:"TPM · Andon · VSM" }
 ];
 var AXES_TABLE = {
   vi: [
@@ -646,9 +694,28 @@ var ACCOUNTS = [
   { user:"CI", pass:"tinh123", role:"lead", team:"CI" },
   { user:"Tech", pass:"vu123", role:"lead", team:"TECH/PE" }
 ];
-var MATRIX_PERIODS = ["2024-1","2024-2","2025-1","2025-2","2026-1","2026-2","2027-1","2027-2"];
-var PERIOD_LABELS = {"2024-1":"Tháng 1/2024","2024-2":"Tháng 7/2024","2025-1":"Tháng 1/2025","2025-2":"Tháng 7/2025","2026-1":"Tháng 1/2026","2026-2":"Tháng 7/2026","2027-1":"Tháng 1/2027","2027-2":"Tháng 7/2027"};
-var PERIOD_LABELS_EN = {"2024-1":"Jan 2024","2024-2":"Jul 2024","2025-1":"Jan 2025","2025-2":"Jul 2025","2026-1":"Jan 2026","2026-2":"Jul 2026","2027-1":"Jan 2027","2027-2":"Jul 2027"};
+// Monthly periods: 2026-01 → current month (Q25/Q26). Generated so the
+// list rolls forward on its own; keys match competency_matrix.period
+// ('YYYY-MM'), so PERIOD_LABELS below is generated too.
+var PERIOD_START_YEAR = 2026;
+var MONTHS_EN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+var MATRIX_PERIODS = (function () {
+  var now = new Date();
+  var endY = now.getFullYear(), endM = now.getMonth() + 1;
+  var out = [];
+  for (var y = PERIOD_START_YEAR; y <= endY; y++) {
+    var lastM = (y === endY) ? endM : 12;
+    for (var m = 1; m <= lastM; m++) out.push(y + '-' + ('0' + m).slice(-2));
+  }
+  return out;
+})();
+var PERIOD_LABELS = {};
+var PERIOD_LABELS_EN = {};
+MATRIX_PERIODS.forEach(function (p) {
+  var parts = p.split('-');
+  PERIOD_LABELS[p] = 'Tháng ' + parseInt(parts[1], 10) + '/' + parts[0];
+  PERIOD_LABELS_EN[p] = MONTHS_EN[parseInt(parts[1], 10) - 1] + ' ' + parts[0];
+});
 
 // ═══════════════════════════════════════════
 // STATE
@@ -897,7 +964,7 @@ function renderOverview(el) {
   var funcPct = funcTarget > 0 ? Math.round(funcScore / funcTarget * 100) : 0;
 
   // ── Team Trends data ──
-  var teams = ['IE', 'TECH/PE', 'CI'];
+  var teams = TEAMS;
   var axisKeys = ['T', 'A', 'C'];
   var axisColors = { T: 'var(--primary)', A: 'var(--axis-language)', C: 'var(--axis-soft)' };
   var axisLabels = { T: t('Kỹ thuật', 'Technical'), A: t('Ứng dụng', 'Application'), C: t('Hành vi', 'Behavioral') };
@@ -1141,7 +1208,7 @@ function renderMatrix(el) {
 
   // Team filter
   html += '<div class="filter-row">';
-  ['All','IE','TECH/PE','CI'].forEach(function(f) {
+  ['All'].concat(TEAMS, [TEAM_UNASSIGNED]).forEach(function(f) {
     html += '<button class="filter-btn'+(matrixFilter===f?' active':'')+'" onclick="matrixFilter=\''+f+'\';renderPage();">'+(f==='All'?t('Tất cả','All'):f)+'</button>';
   });
   html += '<span style="margin-left:auto;display:flex;align-items:center;gap:4px;">';
@@ -1153,6 +1220,9 @@ function renderMatrix(el) {
 
   // Axis legend
   html += '<div class="legend"><span><span class="legend-dot" style="background:var(--axis-lean)"></span>'+t('Kỹ thuật / Ứng dụng','Technical / Application')+'</span><span><span class="legend-dot" style="background:var(--axis-soft)"></span>'+t('Hành vi','Behavioral')+'</span></div>';
+
+  // Server status badge (offline / not-synced)
+  html += sbBadgeHtml();
 
   // Table
   var filtered = PEOPLE.filter(function(p) { return matrixFilter === 'All' || p.team === matrixFilter; });
@@ -1262,12 +1332,14 @@ function setMatrixScore(personId, skillIndex, value) {
 
 function toggleConfirm(personId, skillIndex, val) {
   matrixConfirmed[personId + '_' + skillIndex] = val;
+  pushRowToCloud(personId);
 }
 
 function saveCellEditor(personId) {
   var input = document.getElementById('evInput');
   if (input) matrixEvidence[personId] = input.value;
   saveState();
+  pushRowToCloud(personId);
   document.querySelector('.modal-overlay').remove();
   renderPage();
 }
@@ -1976,7 +2048,7 @@ function renderSurvey(el) {
   // GL name
   html += '<label style="display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:var(--ink-muted);flex:1 1 0;min-width:180px;">'+t('Group Leader','Group Leader')+'<input id="svGL" placeholder="'+t('Họ và tên người điền','Full name of the person filling this in')+'" value="" style="border:1px solid var(--border);padding:6px 8px;background:#fff;color:var(--ink);"></label>';
   // Team
-  html += '<label style="display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:var(--ink-muted);flex:1 1 0;min-width:180px;">'+t('Đội','Team')+'<select id="svTeam" onchange="updateSurveyPeople()" style="border:1px solid var(--border);padding:6px 8px;background:#fff;color:var(--ink);"><option value="IE">IE</option><option value="TECH/PE">TECH/PE</option><option value="CI">CI</option></select></label>';
+  html += '<label style="display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:var(--ink-muted);flex:1 1 0;min-width:180px;">'+t('Đội','Team')+'<select id="svTeam" onchange="updateSurveyPeople()" style="border:1px solid var(--border);padding:6px 8px;background:#fff;color:var(--ink);">' + TEAMS.concat([TEAM_UNASSIGNED]).map(function (tm) { return '<option value="' + tm + '">' + tm + '</option>'; }).join('') + '</select></label>';
   // Employee
   html += '<label style="display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:var(--ink-muted);flex:1 1 0;min-width:180px;">'+t('Nhân viên','Employee')+'<select id="svPerson" onchange="updateSurveyWeak()" style="border:1px solid var(--border);padding:6px 8px;background:#fff;color:var(--ink);"><option value="">-- '+t('Chọn người','Select person')+' --</option></select></label>';
   html += '</div>';
@@ -2183,16 +2255,144 @@ function openSettings() {
 }
 
 // ═══════════════════════════════════════════
+// SUPABASE — COMPETENCY MATRIX
+// ═══════════════════════════════════════════
+//
+// Design decisions (see supabase/migrations/*.sql):
+//   Q9(a)  supabase-js v2 from CDN, ESM glue → window.sb
+//   Q11    local matrix data NOT migrated; cloud starts clean
+//   Q12    one fetch on load, no realtime listener
+//   Q14    stale badge on load failure; optimistic write + toast
+//          + dirty-queue retry on write failure
+//   Q16    column names encode skill identity (append-only)
+//   Q26    periods are monthly, 2026-01 → current month
+//
+// The in-memory shape is UNCHANGED: matrixScores[personId] is still
+// a 28-length array, so every renderer works as before. This layer
+// only translates to/from the wide table.
+
+var SUPABASE_URL = 'https://asehezvcqzmxvzedsejw.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzZWhlenZjcXpteHZ6ZWRzZWp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5ODAxOTAsImV4cCI6MjEwNjU1NjE5MH0.8UtZQtVso599-isMnT5enpejNg442UzHNhzOqva-IJA';
+
+// Column per SKILLS[] index — must stay in sync with 0002_matrix.sql
+var SKILL_COLS = [
+  's00_sixs','s01_waste8','s02_gemba','s03_time_study','s04_vsm',
+  's05_line_balancing','s06_qco','s07_tpm','s08_andon',
+  's09_kaizen','s10_pdca','s11_autocad2d','s12_sketchup3d','s13_twi',
+  's14_lss_yellow','s15_lss_green','s16_lss_black',
+  's17_communication','s18_listening','s19_teamwork','s20_problem_solving',
+  's21_critical','s22_leadership','s23_presentation','s24_feedback',
+  's25_conflict','s26_ai','s27_language'
+];
+
+var sb = null;          // supabase client, set by the ESM glue in <head>
+var sbReady = false;    // glue finished
+var sbOnline = false;   // last load succeeded
+var sbDirty = {};       // {personId: true} rows awaiting push
+
+// ── Row ↔ array ──────────────────────────────────────────────
+function scoresToRow(personId, period, scores) {
+  var row = { person_id: personId, period: period };
+  for (var i = 0; i < SKILL_COLS.length; i++) {
+    var v = scores && scores[i];
+    row[SKILL_COLS[i]] = (v === undefined || v === null) ? null : v;
+  }
+  return row;
+}
+
+// ── Load (Q12: once per page load, all periods) ──────────────
+function loadMatrixFromCloud() {
+  if (!sb) { renderPage(); return; }
+  var from = sb.from('competency_matrix').select('*');
+  from.then(function (res) {
+    if (res.error) { sbOnline = false; renderPage(); return; }
+    var rows = res.data || [];
+    // Reset cloud-sourced rows, keep any local fallback
+    matrixScores = {};
+    rows.forEach(function (r) {
+      var key = (r.period === matrixPeriod) ? r.person_id : r.person_id + '_' + r.period;
+      var arr = [];
+      for (var i = 0; i < SKILL_COLS.length; i++) arr.push(r[SKILL_COLS[i]]);
+      matrixScores[key] = arr;
+    });
+    sbOnline = true;
+    flushDirty();
+    renderPage();
+  });
+}
+
+// ── Save (optimistic: local array is already updated) ────────
+function pushRowToCloud(personId) {
+  if (!sb) { sbDirty[personId] = true; return; }
+  var person = PEOPLE.find(function (p) { return p.id === personId; });
+  if (!person) return;
+  var scores = getEffectiveScores(person);
+  sb.from('competency_matrix')
+    .upsert(scoresToRow(personId, matrixPeriod, scores), { onConflict: 'person_id,period' })
+    .then(function (res) {
+      if (res.error) { sbDirty[personId] = true; toast(res.error.message, true); }
+      else { delete sbDirty[personId]; toastDirty(); }
+    });
+}
+
+// Retry any rows that failed earlier (Q14)
+function flushDirty() {
+  Object.keys(sbDirty).forEach(function (id) { delete sbDirty[id]; pushRowToCloud(id); });
+}
+
+// ── UI feedback (Q14) ────────────────────────────────────────
+function toast(msg, isErr) {
+  var el = document.getElementById('sbToast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'sbToast';
+    el.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:999;padding:8px 14px;border-radius:6px;font:600 12px/1.4 var(--font);box-shadow:0 4px 14px rgba(0,0,0,.15);';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.background = isErr ? '#B5493A' : '#2F7355';
+  el.style.color = '#fff';
+  el.style.display = 'block';
+  clearTimeout(el._t);
+  el._t = setTimeout(function () { el.style.display = 'none'; }, 2600);
+}
+
+// Stale/offline badge, rendered above the matrix table
+function sbBadgeHtml() {
+  if (sbOnline) return '';
+  if (!sb) return '';
+  return '<div class="legend" style="background:#FFF4E8;border-color:#FF9F5A;color:#8A4B12;">⚠ '
+    + t('Không kết nối được máy chủ — đang hiển thị dữ liệu đã lưu cục bộ',
+        'Server unreachable — showing locally cached data')
+    + '</div>';
+}
+
+function toastDirty() {
+  var n = Object.keys(sbDirty).length;
+  if (n) toast(t('⚠ ' + n + ' thay đổi chưa lưu lên máy chủ', '⚠ ' + n + ' changes not yet synced'), true);
+}
+
+// ═══════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════
 
 loadState();
+
+// Set period to current month before any fetch (Q27a)
+(function () {
+  var now = new Date();
+  matrixPeriod = now.getFullYear() + '-' + ('0' + (now.getMonth() + 1)).slice(-2);
+})();
 
 document.querySelectorAll('.nav-item').forEach(function(item) {
   item.addEventListener('click', function() { navigate(this.dataset.page); });
 });
 
 setLang(lang);
+
+// Q12: one fetch on load. If the ESM glue already ran, it called us;
+// if not yet (or the CDN failed), this is the fallback path.
+if (window.sbReady) loadMatrixFromCloud();
 </script>
 </body>
 </html>
