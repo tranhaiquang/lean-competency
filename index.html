@@ -496,7 +496,7 @@ var TEAMS = ["LEAN IE", "LEAN CI", "LEAN TPM", "LEAN TECHNOLOGY"];
 var TEAM_GL = {
   "LEAN IE": "Vương Quốc Bảo",
   "LEAN CI": "Nguyễn Thị Thanh Trang",
-  "LEAN TPM": "",                    // no Group Leader assigned
+  "LEAN TPM": "Chau Khách Huy",       // Huy leads TPM and TECHNOLOGY
   "LEAN TECHNOLOGY": "Chau Khách Huy"
 };
 // People in the CSV whose team isn't one of the LEAN_* teams.
@@ -531,14 +531,14 @@ var ORG_CHART = {
     '23040301': ['21051708'],             // → Chau Khách Huy · A.Manager
     '21051708': ['23032701', '12080610']  // → the two Team leaders
   },
-  // Each leader owns exactly one team — mirrors TEAM_GL.
+  // Leader → the team(s) they own. Mirrors TEAM_GL.
   // TPM and ADMIN have no Group Leader, so their members are placed
   // directly on the staff line instead of under a leader node.
   teamsUnder: {
-    '21051708': ['LEAN TECHNOLOGY'],      // Chau Khách Huy is also TECH GL
-    '23032701': ['LEAN IE'],              // Vương Quốc Bảo
-    '12080610': ['LEAN CI'],              // Nguyễn Thị Thanh Trang
-    '23040301': ['LEAN TPM', TEAM_UNASSIGNED]
+    '21051708': ['LEAN TPM', 'LEAN TECHNOLOGY'],  // Chau Khách Huy leads both
+    '23032701': ['LEAN IE'],                     // Vương Quốc Bảo
+    '12080610': ['LEAN CI'],                     // Nguyễn Thị Thanh Trang
+    '23040301': [TEAM_UNASSIGNED]                // ADMIN — no GL
   },
   // Not in the employees table; drop this node to start at Quang.
   above: { id: 'SY', label: 'GM', name: 'SY', img: 'avatars/SY.jpg' }
