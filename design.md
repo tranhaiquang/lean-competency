@@ -1,32 +1,44 @@
 # Design — LEAN Competency System
 
-A locked design system for this app. Every page redesign reads this file before
+The visual system for this app. Every page redesign reads this file before
 emitting code. Do not regenerate per page — extend or amend this file when the
 system needs to grow.
+
+> **Amended 2026-10-05** — tokens were replaced wholesale to match
+> `SA1 Lean Competency.html`. The previous Hallmark palette
+> (`#5B8DEF` accent, Geist, `#FAFBFF` paper) is gone; the values below are
+> the single source of truth.
 
 ## Genre
 modern-minimal
 
 ## Macrostructure family
 - App pages: **Workbench** — the UI IS the content, function carries the page.
-  Variation knobs: sidebar collapsed/expanded, content density (compact/standard).
+- Sidebar is a floating card (white, 20px radius, soft shadow, 12px inset),
+  not a full-bleed coloured rail.
 
 ## Theme
-- `--color-paper`:   `#FAFBFF`
-- `--color-paper-2`: `#F0F2FC`
-- `--color-ink`:     `#1A1D2E`
-- `--color-ink-2`:   `#6B7080`
-- `--color-rule`:    `#E3E5F0`
-- `--color-accent`:  `#5B8DEF`
-- `--color-accent-ink`: `#FFFFFF`
-- `--color-focus`:   `#5B8DEF`
+| Token | Value | SA1 source |
+|---|---|---|
+| `--primary` | `#2F4B9E` | `rgb(47,75,158)` |
+| `--primary-hover` | `#24407F` | darkened |
+| `--primary-light` | `#4062B5` | lightened |
+| `--brand-bar` | `#4C6EF5` | `rgb(76,110,245)` — top bar |
+| `--brand-tint` | `#EAF0FE` | `rgb(234,240,254)` — active nav fill |
+| `--bg` | `#EFF1F8` | `rgb(239,241,248)` |
+| `--surface` | `#FFFFFF` | cards, sidebar |
+| `--header` | `#EDEFF7` | table header tint |
+| `--border` | `#EDEBF7` | `rgb(237,235,247)` |
+| `--rule-strong` | `#D8D5EA` | `rgb(216,213,234)` — connectors |
+| `--ink` | `#17202B` | `rgb(23,32,43)` |
+| `--ink-muted` | `#64717F` | `rgb(100,113,127)` |
+| `--ink-dim` | `#B7BFC8` | `rgb(183,191,200)` |
 
 ## Typography
-- Display: Geist Sans, weight 600, style normal
-- Body:    Geist Sans, weight 400
-- Mono:    Geist Mono, weight 500 (tabular data only: gap values, scores)
-- Display tracking: -0.025em
-- Type scale anchor: text-display = clamp(1.75rem, 2vw + 1rem, 2.25rem)
+- Body: **Plus Jakarta Sans**, weights 400/500/600/700
+- Mono: **IBM Plex Mono**, weight 500 — tabular data only (scores, gap values)
+- Base size 13px / line-height 1.5, `font-variant-numeric: tabular-nums`
+- Display tracking: -0.015em
 
 ## Spacing
 4-point named scale:
@@ -38,77 +50,77 @@ modern-minimal
 - `--space-lg`:  2rem
 - `--space-xl`:  3rem
 - `--space-2xl`: 4.5rem
-- `--space-3xl`: 7rem
+
+## Shape
+- `--radius-card`: 20px — cards, sidebar, editor panel, gap section
+- `--radius-ctl`: 7px — nav items, filter buttons
+- Pills: 999px; avatars: 50%
+- `--shadow-card`: `0 4px 18px rgba(31, 53, 115, 0.07)`
 
 ## Motion
-- Easings: cubic-bezier(0.16, 1, 0.3, 1) named `--ease-out`
+- Easings: `cubic-bezier(0.16, 1, 0.3, 1)` named `--ease-out`
 - Durations: `--dur-short: 220ms`
-- Reveal pattern: fade-up stagger on page content load
-- Reduced-motion fallback: opacity-only, ≤ 150 ms
 
 ## Microinteractions stance
 - Silent success (no toasts)
 - Hover delay 800 ms
-- Focus delay 0 ms
 - No bouncy / overshoot easings
 
 ## CTA voice
-- Primary CTA: filled, 6px radius, accent background, accent-ink text
-- Secondary CTA: outlined, 6px radius, rule border, ink text
-- Nav items: edge-aligned, left accent border on active, no fill
-
-## Per-page allowances
-- App pages MUST NOT use enrichment — function carries the page.
-- Dashboard pages MAY use data visualization (gap chart, progress bars).
-- All data rendering uses the locked token scale.
-
-## What pages MUST share
-- The wordmark / logotype ("LEAN Competency System").
-- The accent colour and its placement (sidebar background, active states).
-- The display + body fonts (Geist Sans).
-- The CTA voice (button shape, border-radius, padding rhythm).
-- Section heading rhythm (display heading + muted description pattern).
-
-## What pages MAY differ on
-- Content density within the Workbench family.
-- Data visualization type (chart vs. table vs. card grid).
-- Filter / tab arrangements per page needs.
+- Primary CTA: filled, 7px radius, `--primary` background, white text
+- Secondary CTA: outlined, 7px radius, border colour, ink text
+- Nav items: floating pills, `--brand-tint` fill + `--primary` text when active
 
 ## Data colors (semantic)
-- Level ramp (0–4): `#EEF4FD` → `#D6E4FB` → `#A8C8F7` → `#7AAAF2` → `#5B8DEF`
-- Axis Technical: `#5B8DEF` (accent)
-- Axis Application: `#FF9F5A` (orange)
-- Axis Behavioral: `#2F9E8F` (teal)
-- Evidence flag: `#FF9F5A` (orange)
-- Active nav border: `#FF9F5A` (orange)
+- Level ramp (0–4): `#E8ECF7` → `#C9D3EE` → `#A3B4DE` → `#6C86C4` → `#2F4B9E`
+  (derived from `--primary`; SA1 defines no ramp — **append-only, do not reorder**)
+- Axis Technical: `#2F4B9E`
+- Axis Application: `#F5A66E` (orange)
+- Axis Behavioral: `#1F6459` (teal)
+- Positive: `#2F7355` · Negative: `#B5493A`
+- Evidence flag: `#F5A66E`
+- Org-chart tiers: GM `#0E8074`, S.Manager `#1D4ED8`, A.Manager `#15803D`,
+  Team leader `#15803D`, Staff `#2F4B9E`
+
+## Hardcoded colour policy
+All UI colour must come from a custom property. The remaining literal hex
+values in `index.html` are legacy course/status badge fills — migrate them to
+tokens when touched; do not add new ones.
 
 ## Exports
 
 ### tokens.css
 ```css
 :root {
-  --color-paper:      #FAFBFF;
-  --color-paper-2:    #F0F2FC;
-  --color-ink:        #1A1D2E;
-  --color-ink-2:      #6B7080;
-  --color-rule:       #E3E5F0;
-  --color-accent:     #5B8DEF;
-  --color-accent-ink: #FFFFFF;
-  --color-focus:      #5B8DEF;
+  --primary:       #2F4B9E;
+  --primary-hover: #24407F;
+  --primary-light: #4062B5;
+  --brand-bar:     #4C6EF5;
+  --brand-tint:    #EAF0FE;
 
-  --font-display: "Geist", ui-sans-serif, system-ui, sans-serif;
-  --font-body:    "Geist", ui-sans-serif, system-ui, sans-serif;
-  --font-mono:    "Geist Mono", ui-monospace, monospace;
+  --level-0: #E8ECF7;  --level-1: #C9D3EE;  --level-2: #A3B4DE;
+  --level-3: #6C86C4;  --level-4: #2F4B9E;
+
+  --bg: #EFF1F8;  --surface: #FFFFFF;  --header: #EDEFF7;
+  --border: #EDEBF7;  --row-border: #F3F2FA;  --rule-strong: #D8D5EA;
+
+  --ink: #17202B;  --ink-muted: #64717F;  --ink-dim: #B7BFC8;
+
+  --evidence-flag: #F5A66E;
+  --axis-lean: #2F4B9E;  --axis-soft: #1F6459;  --axis-language: #F5A66E;
+  --positive: #2F7355;  --negative: #B5493A;
+
+  --radius-card: 20px;  --radius-ctl: 7px;
+  --shadow-card: 0 4px 18px rgba(31, 53, 115, 0.07);
+
+  --font: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
 
   --space-3xs: 0.25rem;  --space-2xs: 0.5rem;  --space-xs: 0.75rem;
-  --space-sm:  1rem;     --space-md:  1.5rem;  --space-lg: 2rem;
-  --space-xl:  3rem;     --space-2xl: 4.5rem;  --space-3xl: 7rem;
-
-  --text-xs: 0.75rem;  --text-sm: 0.875rem; --text-md: 1.125rem;
-  --text-lg: 1.375rem; --text-xl: 1.75rem;  --text-2xl: 2.25rem;
+  --space-sm: 1rem;      --space-md: 1.5rem;  --space-lg: 2rem;
+  --space-xl: 3rem;      --space-2xl: 4.5rem;
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --dur-short: 220ms;
-  --radius-card: 6px; --radius-pill: 999px; --radius-input: 4px;
 }
 ```

@@ -119,6 +119,18 @@ insert into public.competency_matrix (
    2, 2, 2,
    2, 2),
 
+('25051501', '2026-10', 'Lê Thị Hồng Vân',          -- Staff · LEAN IE · University
+   3, 3, 3, 3, 3,
+   3, 2, 3, 2,
+   3, 3,
+   null, null,
+   null,
+   3, 1, null,
+   3, 3, 3,
+   3, 3, 3,
+   3, 3, 2,
+   3, 3),
+
 -- ── LEAN CI staff ────────────────────────────────────────────
 ('16111801', '2026-10', 'Trần Thị Mỹ Diễm',         -- Staff · LEAN CI
    3, 3, 3, 3, 3,
@@ -304,6 +316,18 @@ insert into public.competency_matrix (
    3, 3, 4,
    3, 3, 4,
    4, 3, 3,
+   3, 3),
+
+('25051501', '2026-09', 'Lê Thị Hồng Vân',
+   2, 3, 3, 3, 2,
+   3, 2, 3, 2,
+   3, 2,
+   null, null,
+   null,
+   3, 1, null,
+   3, 3, 3,
+   3, 3, 3,
+   2, 3, 2,
    3, 3),
 
 ('26070601', '2026-09', 'Hoàng Minh Chiến',
