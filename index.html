@@ -503,9 +503,11 @@ var TEAM_GL = {
 // Declared before ORG_CHART because teamsUnder references it.
 var TEAM_UNASSIGNED = "Other";
 
-// Org chart visibility. Off until the reporting lines are confirmed —
-// A.Manager above Team leader, who owns which team, and who owns TPM/ADMIN.
-var SHOW_ORG_CHART = false;
+// Org chart visibility.
+// Reporting lines confirmed: A.Manager above Team leader; IE → Bảo,
+// CI → Trang, TECHNOLOGY → Huy; TPM and ADMIN have no GL and sit on
+// the staff line.
+var SHOW_ORG_CHART = true;
 // ── ORG CHART ─────────────────────────────────────────────────
 // Reporting lines, taken from the SA1 org chart and mapped onto the
 // employee IDs in PEOPLE[]. 18 people, 5 tiers.
@@ -694,13 +696,30 @@ function renderOrgChart() {
   // The root hosts both its direct reports and any leaderless teams.
   var rootTeams = (ORG_CHART.teamsUnder[ORG_CHART.root] || [])
     .map(function (tm) { return teamCluster(tm, branchSize - 10, true); }).filter(Boolean);
-  var rowItems = kids.map(function (cid) { return branch(cid, branchSize); })
-    .concat(rootTeams);
-  if (rowItems.length) {
+  var centre = kids.map(function (cid) { return branch(cid, branchSize); });
+  var barStyle = 'width:100%;border-top:2px solid ' + line + ';';
+
+  if (rootTeams.length) {
+    // Split the leaderless teams either side of the managers so the
+    // A.Manager stays on the vertical axis (grid: 1fr auto 1fr).
+    var split = Math.ceil(rootTeams.length / 2);
+    var left = rootTeams.slice(0, split);
+    var right = rootTeams.slice(split);
+    var cell = 'display:flex;gap:' + (gapX + 6) + 'px;flex-wrap:wrap;'
+      + 'justify-content:center;align-items:flex-end;row-gap:' + gapY + 'px;';
     html += '<div style="width:2px;height:' + stem + 'px;background:' + line + ';"></div>';
-    html += '<div style="width:100%;border-top:2px solid ' + line + ';display:flex;'
-      + 'gap:' + (gapX + 6) + 'px;flex-wrap:wrap;justify-content:center;row-gap:' + gapY + 'px;">'
-      + rowItems.join('') + '</div>';
+    html += '<div style="' + barStyle + 'display:grid;'
+      + 'grid-template-columns:1fr auto 1fr;column-gap:' + (gapX + 6) + 'px;'
+      + 'align-items:stretch;">'
+      + '<div style="' + cell + 'min-width:0;">' + left.join('') + '</div>'
+      + '<div style="' + cell + '">' + centre.join('') + '</div>'
+      + '<div style="' + cell + 'min-width:0;">' + right.join('') + '</div>'
+      + '</div>';
+  } else if (centre.length) {
+    html += '<div style="width:2px;height:' + stem + 'px;background:' + line + ';"></div>';
+    html += '<div style="' + barStyle + 'display:flex;gap:' + (gapX + 6) + 'px;'
+      + 'flex-wrap:wrap;justify-content:center;row-gap:' + gapY + 'px;">'
+      + centre.join('') + '</div>';
   }
   html += '</div></div>';
   return html;
@@ -1275,8 +1294,6 @@ function renderOverview(el) {
   var html = '';
 
   // 0. Org chart (top of page)
-  // Hidden for now — reporting lines still need verifying.
-  // Set to true to show. Data + renderer stay in place.
   if (SHOW_ORG_CHART) {
     html += '<div class="card" style="margin-bottom:20px;padding:20px 24px 24px;">' + renderOrgChart() + '</div>';
   }
