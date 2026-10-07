@@ -274,7 +274,7 @@ td.met-col { text-align: right; font-size: 11.5px; color: var(--ink-muted); back
 .orgc-lane-head .orgc-lt { display: flex; align-items: baseline; gap: 8px; }
 .orgc-lane-head .orgc-lt b { font-family: var(--mono); font-size: 12px; font-weight: 500; }
 .orgc-lane-head .orgc-lt span { font-family: var(--mono); font-size: 10.5px; color: var(--ink-dim); margin-left: auto; }
-.orgc-lane-lead { margin-top: 6px; display: block; }
+.orgc-lane-lead { margin: 6px auto 0; display: flex; width: fit-content; max-width: 100%; }
 .orgc-lane-body { padding: 8px; display: grid; gap: 6px; }
 .orgc-lane-body .orgc-node { border-color: transparent; background: var(--surface); }
 .orgc-lane-none { padding: 16px 12px; font-size: 11.5px; color: var(--ink-dim); text-align: center; }
@@ -832,8 +832,8 @@ function orgSpineHtml() {
 
 function orgLanesHtml() {
   var placed = orgPlacedIds();
-  // TEAMS first, then TEAM_UNASSIGNED (ADMIN) last.
-  var order = TEAMS.concat([TEAM_UNASSIGNED]);
+  // Explicit column order: CI → IE → Admin → TPM → Tech.
+  var order = ['LEAN CI', 'LEAN IE', TEAM_UNASSIGNED, 'LEAN TPM', 'LEAN TECHNOLOGY'];
   var out = '<div class="orgc-lanes">';
   var lanes = 0;
 
@@ -841,14 +841,16 @@ function orgLanesHtml() {
     var members = PEOPLE.filter(function (p) {
       return p.team === team && !placed[p.id];
     });
-    if (!members.length) return;
+    var lid = orgLeaderOf(team);
+    // Render a lane when it has unplaced staff OR a (placed) leader node —
+    // otherwise an all-placed team like Admin would never show.
+    if (!members.length && !lid) return;
     lanes++;
 
     out += '<div class="orgc-lane"><div class="orgc-lane-head">'
       + '<div class="orgc-lt"><b>' + orgEscape(orgTeamLabel(team)) + '</b>'
       + '<span>' + members.length + ' ' + t('người', 'people') + '</span></div>';
 
-    var lid = orgLeaderOf(team);
     var leaderNode = lid ? orgNodeHtml(lid, { cls: 'orgc-lane-lead' }) : '';
     out += leaderNode || '<span class="orgc-lane-none">'
       + t('Không có trưởng nhóm', 'No group leader') + '</span>';
