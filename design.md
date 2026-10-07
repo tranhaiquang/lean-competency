@@ -79,9 +79,10 @@ modern-minimal
 - Axis Behavioral: `#1F6459` (teal)
 - Positive: `#2F7355` · Negative: `#B5493A`
 - Evidence flag: `#F5A66E`
-- Org-chart tiers: GM `#0E8074`, S.Manager `#1D4ED8`, A.Manager `#15803D`,
+- Org-chart tiers: GM `#0E8074`, S.Manager `#1D4ED8`,
   Team leader `#15803D`, Staff `#2F4B9E` — exposed as `--tier-*` tokens, never
-  as a JS colour map
+  as a JS colour map. (A.Manager `#15803D` was removed 2026-10-07 when the tier
+  left the org; its `--tier-amgr` token is gone too)
 
 ## Org chart
 
@@ -130,7 +131,7 @@ tokens when touched; do not add new ones.
   --positive: #2F7355;  --negative: #B5493A;
 
   /* Org-chart tiers */
-  --tier-gm: #0E8074;  --tier-smgr: #1D4ED8;  --tier-amgr: #15803D;
+  --tier-gm: #0E8074;  --tier-smgr: #1D4ED8;
   --tier-lead: #15803D;  --tier-staff: #2F4B9E;
 
   --radius-card: 20px;  --radius-ctl: 7px;

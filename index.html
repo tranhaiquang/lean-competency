@@ -65,7 +65,6 @@ if (typeof window.loadMatrixFromCloud === 'function') window.loadMatrixFromCloud
   /* Org-chart tiers — SA1 org chart. Used by .orgc-node rings + chips. */
   --tier-gm: #0E8074;
   --tier-smgr: #1D4ED8;
-  --tier-amgr: #15803D;
   --tier-lead: #15803D;
   --tier-staff: #2F4B9E;
 
@@ -256,7 +255,6 @@ td.met-col { text-align: right; font-size: 11.5px; color: var(--ink-muted); back
 .orgc-av img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 .orgc-node[data-tier="gm"] .orgc-av { box-shadow: 0 0 0 2px var(--tier-gm); }
 .orgc-node[data-tier="smgr"] .orgc-av { box-shadow: 0 0 0 2px var(--tier-smgr); }
-.orgc-node[data-tier="amgr"] .orgc-av { box-shadow: 0 0 0 2px var(--tier-smgr); }
 .orgc-node[data-tier="lead"] .orgc-av { box-shadow: 0 0 0 2px var(--tier-lead); }
 .orgc-node[data-tier="staff"] .orgc-av { box-shadow: 0 0 0 2px var(--level-2); }
 
@@ -266,7 +264,6 @@ td.met-col { text-align: right; font-size: 11.5px; color: var(--ink-muted); back
 .orgc-chip { font-family: var(--mono); font-size: 9.5px; margin-left: auto; flex: 0 0 auto; border-radius: 999px; padding: 2px 7px; white-space: nowrap; }
 .orgc-node[data-tier="gm"] .orgc-chip { background: color-mix(in oklab, var(--tier-gm) 12%, var(--surface)); color: var(--tier-gm); }
 .orgc-node[data-tier="smgr"] .orgc-chip { background: color-mix(in oklab, var(--tier-smgr) 12%, var(--surface)); color: var(--tier-smgr); }
-.orgc-node[data-tier="amgr"] .orgc-chip { background: color-mix(in oklab, var(--tier-amgr) 12%, var(--surface)); color: var(--tier-amgr); }
 .orgc-node[data-tier="lead"] .orgc-chip { background: color-mix(in oklab, var(--tier-lead) 12%, var(--surface)); color: var(--tier-lead); }
 .orgc-node[data-tier="staff"] .orgc-chip { background: var(--level-0); color: var(--ink-muted); }
 
@@ -596,41 +593,42 @@ var TEAM_GL = {
 var TEAM_UNASSIGNED = "Other";
 
 // Org chart visibility.
-// Reporting lines confirmed: A.Manager above Team leader; IE → Bảo,
-// CI → Trang, TECHNOLOGY → Huy; TPM and ADMIN have no GL and sit on
-// the staff line.
+// Reporting lines confirmed: IE → Bảo, CI → Trang, TECHNOLOGY + TPM →
+// Huy; all three Team leaders report to the S.Manager. ADMIN has no
+// Team leader and sits on the staff line.
 var SHOW_ORG_CHART = true;
 // ── ORG CHART ─────────────────────────────────────────────────
 // Reporting lines, taken from the SA1 org chart and mapped onto the
-// employee IDs in PEOPLE[]. 18 people, 5 tiers.
+// employee IDs in PEOPLE[]. 18 people, 4 tiers — the A.Manager layer
+// was removed 2026-10-07 (Huy became a Team Leader), so the three
+// team leaders are now siblings under the S.Manager.
 //
 //   Nguyễn Minh Quang   (S.Manager)
-//   └─ Chau Khách Huy   (A.Manager)
-//      ├─ Vương Quốc Bảo (Team leader, LEAN IE)
-//      │  └─ LEAN IE + LEAN TECHNOLOGY + LEAN TPM staff  (9)
-//      └─ Nguyễn Thị Thanh Trang (Team leader, LEAN CI)
-//         └─ LEAN CI staff + ADMIN (Liễu)                (5)
+//   ├─ Chau Khách Huy          (Team leader · LEAN TPM + LEAN TECHNOLOGY)
+//   ├─ Vương Quốc Bảo         (Team leader · LEAN IE)
+//   └─ Nguyễn Thị Thanh Trang (Team leader · LEAN CI)
+//
+// ADMIN (Liễu) has no Team leader and sits directly under Quang.
 //
 // ⚠ Reporting lines are organisational facts — verify them. They
-// are NOT derived from employees.team (Bảo supervises three teams).
+// are NOT derived from employees.team (Huy supervises two teams).
 // Each leader's reports are grouped into TEAMS, and the people in
 // each cluster come from PEOPLE[].team — so rosters stay in sync.
 var ORG_CHART = {
   root: '23040301',                       // Nguyễn Minh Quang · S.Manager
   reports: {
-    // A.Manager sits ABOVE the Team leaders — seniority order:
-    // S.Manager → A.Manager → Team leader → Staff
-    '23040301': ['21051708'],             // → Chau Khách Huy · A.Manager
-    '21051708': ['23032701', '12080610']  // → the two Team leaders
+    // Flat since the A.Manager layer was removed. Seniority order is now
+    // S.Manager → Team leader → Staff.
+    '23040301': ['21051708', '23032701', '12080610']  // → the three Team leaders
   },
   // Leader → the team(s) they own. Mirrors TEAM_GL.
-  // TPM and ADMIN have no Group Leader, so their members are placed
-  // directly on the staff line instead of under a leader node.
+  // ADMIN has no Team leader, so its member is placed directly on the
+  // staff line instead of under a leader node.
   teamsUnder: {
     '21051708': ['LEAN TPM', 'LEAN TECHNOLOGY'],  // Chau Khách Huy leads both
     '23032701': ['LEAN IE'],                     // Vương Quốc Bảo
     '12080610': ['LEAN CI'],                     // Nguyễn Thị Thanh Trang
-    '23040301': [TEAM_UNASSIGNED]                // ADMIN — no GL
+    '23040301': [TEAM_UNASSIGNED]                // ADMIN — no Team leader
   },
   // Not in the employees table; drop this node to start at Quang.
   above: { id: 'SY', label: 'GM', name: 'SY', img: 'avatars/SY.jpg' }
@@ -652,8 +650,7 @@ function orgTeamLabel(team) {
 // Badge colours live in CSS as --tier-* custom properties; the node
 // only carries a `data-tier` key so the stylesheet can pick the colour.
 var ORG_TIER_KEY = {
-  'GM': 'gm', 'S.Manager': 'smgr', 'A.Manager': 'amgr',
-  'Team leader': 'lead', 'Staff': 'staff'
+  'GM': 'gm', 'S.Manager': 'smgr', 'Team leader': 'lead', 'Staff': 'staff'
 };
 
 // ── ORG CHART RENDER ──────────────────────────────────────────
@@ -827,13 +824,14 @@ function openPersonPlan(id) {
 // scores come from the cloud table, loaded on start.
 // Team values not in TEAMS are grouped under TEAM_UNASSIGNED:
 //   ADMIN (Nguyễn Thị Bích Liễu), blank (Nguyễn Minh Quang)
-// pos = employees.seniority verbatim (Team leader / A.Manager / S.Manager / Staff)
+// pos = employees.seniority verbatim (Team leader / S.Manager / Staff).
+// The A.Manager tier was removed 2026-10-07 — nobody occupies it.
 var PEOPLE = [
   { id: "12080610", name: "Nguyễn Thị Thanh Trang", team: "LEAN CI",         pos: "Team leader", s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
   { id: "14052701", name: "Nguyễn Thị Bích Liễu",   team: TEAM_UNASSIGNED,  pos: "Team leader", s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
   { id: "16031603", name: "Võ Thị Thủy Tiên",       team: "LEAN IE",         pos: "Staff",       s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
   { id: "16111801", name: "Trần Thị Mỹ Diễm",       team: "LEAN CI",         pos: "Staff",       s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
-  { id: "21051708", name: "Chau Khách Huy",         team: "LEAN TECHNOLOGY", pos: "A.Manager",   s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
+  { id: "21051708", name: "Chau Khách Huy",         team: "LEAN TECHNOLOGY", pos: "Team leader", s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
   { id: "22022301", name: "Trương Thị Cẩm Tú",      team: "LEAN IE",         pos: "Staff",       s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
   { id: "23032701", name: "Vương Quốc Bảo",         team: "LEAN IE",         pos: "Team leader", s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
   { id: "23040301", name: "Nguyễn Minh Quang",      team: TEAM_UNASSIGNED,  pos: "S.Manager",   s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },
@@ -862,11 +860,12 @@ var TARGET = {};
 // closest original profile:
 //   Staff        ← old "Staff"
 //   Team leader  ← old "G. Leader"
-//   A.Manager    ← old "Leader"
 //   S.Manager    ← old "Supervisor"
 // Profiles that nobody occupies any more (old "Leader" where a
 // Team leader took its place, "Supervisor" on other teams) are kept
-// so existing references keep resolving.
+// so existing references keep resolving. The |A.Manager rows are kept
+// on the same basis — the tier left the org on 2026-10-07, but the
+// profiles remain valid should it ever come back.
 
 TARGET["LEAN IE|Staff"]        = [2,2,2,3,3,2,2,2,2,2,2,2,2,1,2,2,0,1,1,1,1,1,1,1,1,1,1,0];
 TARGET["LEAN IE|Team leader"]  = [2,2,4,3,3,4,2,2,2,2,4,3,3,4,2,2,0,2,2,2,2,2,2,2,2,2,2,1];
@@ -1029,8 +1028,9 @@ var COURSE_CERTS = {
   "LSS-YB": []
 };
 // Tier = employees.seniority, kept verbatim (no collapsing).
-// Ordering is seniority, ascending.
-var TIER_ORDER = ["Staff","Team leader","A.Manager","S.Manager"];
+// Ordering is seniority, ascending. A.Manager was removed 2026-10-07 —
+// Huy became a Team Leader, so the tier no longer exists in the org.
+var TIER_ORDER = ["Staff","Team leader","S.Manager"];
 // Core-skill groupings, remapped to the CSV team names
 var CORE_SKILLS = [
   { team:"LEAN IE",         skills:"Time Study & ECRS · Line Balancing · VSM" },

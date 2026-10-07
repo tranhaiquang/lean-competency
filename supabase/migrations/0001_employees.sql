@@ -10,7 +10,7 @@
 create table if not exists public.employees (
   employee_id  bigint        primary key,          -- CSV "ID", verified unique across all 18 rows
   full_name    text          not null,
-  seniority    text,                               -- Team leader | A.Manager | S.Manager | Staff
+  seniority    text,                               -- Team leader | S.Manager | Staff
   team         text,                               -- nullable: CSV row 9 (Nguyễn Minh Quang) is blank
   education    text,
   hometown     text,
@@ -47,7 +47,7 @@ values
   (14052701, 'Nguyễn Thị Bích Liễu',      'Team leader', 'ADMIN',            'College',     'HCMC',       '{vn,en}'),
   (16031603, 'Võ Thị Thủy Tiên',         'Staff',       'LEAN IE',          'College',     'HCMC',       '{vn,en}'),
   (16111801, 'Trần Thị Mỹ Diễm',         'Staff',       'LEAN CI',          'University',  'Quảng Nam',  '{vn,en}'),
-  (21051708, 'Chau Khách Huy',           'A.Manager',   'LEAN TECHNOLOGY',  'University',  'An Giang',   '{vn,en}'),
+  (21051708, 'Chau Khách Huy',           'Team leader',  'LEAN TECHNOLOGY',  'University',  'An Giang',   '{vn,en}'),
   (22022301, 'Trương Thị Cẩm Tú',        'Staff',       'LEAN IE',          'High School', 'Ca Mau',     '{vn,en}'),
   (23032701, 'Vương Quốc Bảo',           'Team leader', 'LEAN IE',          'High School', 'HCMC',       '{vn,en}'),
   (23040301, 'Nguyễn Minh Quang',        'S.Manager',   NULL,               'University',  'Dong Nai',   '{vn,en}'),

@@ -58,7 +58,7 @@ insert into public.competency_matrix (
    3, 3, 3,
    2, 4),
 
-('21051708', '2026-10', 'Chau Khách Huy',           -- A.Manager · LEAN TECHNOLOGY
+('21051708', '2026-10', 'Chau Khách Huy',           -- Team leader · LEAN TECHNOLOGY
    4, 4, 3, 4, 4,
    4, 3, 3, 3,
    4, 4,
