@@ -62,6 +62,13 @@ if (typeof window.loadMatrixFromCloud === 'function') window.loadMatrixFromCloud
   --positive: #2F7355;
   --negative: #B5493A;
 
+  /* Org-chart tiers — SA1 org chart. Used by .orgc-node rings + chips. */
+  --tier-gm: #0E8074;
+  --tier-smgr: #1D4ED8;
+  --tier-amgr: #15803D;
+  --tier-lead: #15803D;
+  --tier-staff: #2F4B9E;
+
   /* Shape — SA1 uses 20px cards / 7-10px controls */
   --radius-card: 20px;
   --radius-ctl: 7px;
@@ -205,6 +212,91 @@ td.met-col { text-align: right; font-size: 11.5px; color: var(--ink-muted); back
 /* ═══ CARDS ═══ */
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 16px; margin-bottom: 16px; box-shadow: var(--shadow-card); }
 .card-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+
+/* ═══ ORG CHART ═══ Design C — leadership spine + team lanes.
+   Reporting lines read down the left; team membership reads across the
+   right. Replaces the inline-style tree; archived at
+   org-chart-legacy-backup.html. */
+.orgc-card { padding: 20px 24px 24px; }
+.orgc-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; margin-bottom: 16px; }
+.orgc-head h2 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+.orgc-count { font-family: var(--mono); font-size: 11px; color: var(--ink-muted); }
+.orgc-hint { margin-left: auto; font-size: 11.5px; color: var(--ink-dim); }
+.orgc-split { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 24px; align-items: start; }
+
+/* Spine — one vertical rule, ticks at each depth */
+.orgc-spine { border-right: 1px solid var(--border); padding-right: 24px; }
+.orgc-spine-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-dim); margin: 0 0 12px; }
+.orgc-spine ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.orgc-si { position: relative; padding-left: 18px; padding-bottom: 16px; }
+.orgc-si::before { content: ""; position: absolute; left: 6px; top: 14px; bottom: 0; width: 1px; background: var(--rule-strong); }
+.orgc-si:last-child::before { display: none; }
+.orgc-si::after { content: ""; position: absolute; left: 6px; top: 14px; width: 7px; height: 1px; background: var(--rule-strong); }
+.orgc-si:first-child::after { display: none; }
+.orgc-si[data-depth="1"] { padding-left: 34px; }
+.orgc-si[data-depth="1"]::before, .orgc-si[data-depth="1"]::after { left: 22px; }
+.orgc-si[data-depth="2"] { padding-left: 50px; }
+.orgc-si[data-depth="2"]::before, .orgc-si[data-depth="2"]::after { left: 38px; }
+
+/* Person node — a real button; every state styled */
+.orgc-node {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  padding: 8px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-ctl); cursor: pointer; font-family: var(--font);
+  transition: border-color 220ms var(--ease-out), background 220ms var(--ease-out), transform 220ms var(--ease-out);
+}
+.orgc-node:hover { border-color: var(--rule-strong); transform: translateX(2px); }
+.orgc-node:active { transform: translateX(0); }
+.orgc-node:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.orgc-node:disabled { cursor: not-allowed; opacity: 0.66; transform: none; border-style: dashed; }
+.orgc-node[aria-pressed="true"] { border-color: var(--primary); background: var(--brand-tint); }
+
+.orgc-av { position: relative; width: 32px; height: 32px; flex: 0 0 auto; border-radius: 50%; overflow: hidden; background: var(--level-1); display: flex; align-items: center; justify-content: center; }
+.orgc-av::after { content: attr(data-ini); font-size: 12px; font-weight: 700; color: var(--surface); }
+.orgc-av img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.orgc-node[data-tier="gm"] .orgc-av { box-shadow: 0 0 0 2px var(--tier-gm); }
+.orgc-node[data-tier="smgr"] .orgc-av { box-shadow: 0 0 0 2px var(--tier-smgr); }
+.orgc-node[data-tier="amgr"] .orgc-av { box-shadow: 0 0 0 2px var(--tier-smgr); }
+.orgc-node[data-tier="lead"] .orgc-av { box-shadow: 0 0 0 2px var(--tier-lead); }
+.orgc-node[data-tier="staff"] .orgc-av { box-shadow: 0 0 0 2px var(--level-2); }
+
+.orgc-nm { min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.orgc-nm b { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.orgc-nm i { font-style: normal; font-family: var(--mono); font-size: 10px; color: var(--ink-dim); }
+.orgc-chip { font-family: var(--mono); font-size: 9.5px; margin-left: auto; flex: 0 0 auto; border-radius: 999px; padding: 2px 7px; white-space: nowrap; }
+.orgc-node[data-tier="gm"] .orgc-chip { background: color-mix(in oklab, var(--tier-gm) 12%, var(--surface)); color: var(--tier-gm); }
+.orgc-node[data-tier="smgr"] .orgc-chip { background: color-mix(in oklab, var(--tier-smgr) 12%, var(--surface)); color: var(--tier-smgr); }
+.orgc-node[data-tier="amgr"] .orgc-chip { background: color-mix(in oklab, var(--tier-amgr) 12%, var(--surface)); color: var(--tier-amgr); }
+.orgc-node[data-tier="lead"] .orgc-chip { background: color-mix(in oklab, var(--tier-lead) 12%, var(--surface)); color: var(--tier-lead); }
+.orgc-node[data-tier="staff"] .orgc-chip { background: var(--level-0); color: var(--ink-muted); }
+
+/* Team lanes */
+.orgc-lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(196px, 1fr)); gap: 12px; }
+.orgc-lane { display: flex; flex-direction: column; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-ctl); overflow: hidden; }
+.orgc-lane-head { padding: 12px; border-bottom: 1px solid var(--border); background: var(--header); }
+.orgc-lane-head .orgc-lt { display: flex; align-items: baseline; gap: 8px; }
+.orgc-lane-head .orgc-lt b { font-family: var(--mono); font-size: 12px; font-weight: 500; }
+.orgc-lane-head .orgc-lt span { font-family: var(--mono); font-size: 10.5px; color: var(--ink-dim); margin-left: auto; }
+.orgc-lane-lead { margin-top: 6px; display: block; }
+.orgc-lane-body { padding: 8px; display: grid; gap: 6px; }
+.orgc-lane-body .orgc-node { border-color: transparent; background: var(--surface); }
+.orgc-lane-none { padding: 16px 12px; font-size: 11.5px; color: var(--ink-dim); text-align: center; }
+
+@media (max-width: 900px) {
+  .orgc-split { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .orgc-spine { border-right: 0; border-bottom: 1px solid var(--border); padding-right: 0; padding-bottom: 16px; }
+  .orgc-spine ol { flex-direction: row; flex-wrap: wrap; gap: 8px; }
+  .orgc-si { padding-left: 0; padding-bottom: 0; flex: 1 1 168px; min-width: 0; }
+  .orgc-si::before, .orgc-si::after { display: none; }
+  .orgc-hint { display: none; }
+}
+@media (max-width: 640px) {
+  .orgc-card { padding: 16px; }
+  .orgc-lanes { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orgc-node { transition: none; }
+}
 
 /* ═══ KPI ROW ═══ */
 .kpi-row { display: flex; gap: 1px; background: var(--border); border: 1px solid var(--border); margin: 20px 0; flex-wrap: wrap; }
@@ -557,13 +649,15 @@ function orgTeamLabel(team) {
   return ORG_TEAM_LABEL[team] || team;
 }
 
-// Badge colours per tier, from the SA1 org chart.
-var ORG_TIER_COLOR = {
-  'GM': '#0E8074', 'S.Manager': '#1D4ED8', 'A.Manager': '#15803D',
-  'Team leader': '#15803D', 'Staff': '#2F4B9E'
+// Badge colours live in CSS as --tier-* custom properties; the node
+// only carries a `data-tier` key so the stylesheet can pick the colour.
+var ORG_TIER_KEY = {
+  'GM': 'gm', 'S.Manager': 'smgr', 'A.Manager': 'amgr',
+  'Team leader': 'lead', 'Staff': 'staff'
 };
 
 // ── ORG CHART RENDER ──────────────────────────────────────────
+// Design C — leadership spine (left) + team lanes (right).
 function orgPerson(id) {
   return PEOPLE.find(function (p) { return p.id === id; }) || null;
 }
@@ -574,61 +668,16 @@ function orgShortName(full) {
   return parts.length > 1 ? parts[parts.length - 1] : full;
 }
 
-function orgNodeHtml(id, size, override) {
-  var p = orgPerson(id);
-  var badge, name, img;
-  if (override) {
-    badge = override.label || 'Staff';
-    name = override.name || id;
-    img = override.img || '';
-  } else if (p) {
-    badge = p.pos; name = orgShortName(p.name); img = 'avatars/' + p.id + '.jpg';
-  } else {
-    badge = 'Staff'; name = id; img = '';
-  }
-  var color = ORG_TIER_COLOR[badge] || '#2F4B9E';
-  var sz = size || 44;
-  // Badge / name sizes scale with the avatar so the ratio holds at any size.
-  var fs = Math.round(sz * 0.21 * 10) / 10;      // 8.4px at 40, 10.5px at 50
-  var nfs = Math.round(sz * 0.26 * 10) / 10;     // name under the badge
-  var ring = Math.max(2, Math.round(sz / 20));   // outer ring thickness
-  var gap = Math.round(sz / 8);                 // avatar → badge
-  var radius = Math.round(sz / 5);
-  var initial = (name.charAt(0) || '?');
-  var avatar
-    = '<img src="' + img + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;"'
-      + ' onerror="this.style.display=\'none\';this.parentNode.querySelector(\'.org-init\').style.display=\'flex\';">'
-      + '<span class="org-init" style="display:none;position:absolute;inset:0;align-items:center;'
-      + 'justify-content:center;font-size:' + Math.round(sz / 2.4) + 'px;font-weight:700;color:#fff;">'
-      + initial + '</span>';
-
-  return '<div style="display:flex;flex-direction:column;align-items:center;">'
-    + '<div style="position:relative;width:' + sz + 'px;height:' + sz + 'px;flex:0 0 auto;'
-    + 'border-radius:50%;box-shadow:0 0 0 ' + ring + 'px var(--surface),0 0 0 '
-    + (ring * 2) + 'px ' + color + ';">'
-    + avatar + '</div>'
-    + '<div style="margin-top:' + gap + 'px;background:' + color + ';color:#fff;font-size:' + fs + 'px;'
-    + 'font-weight:700;padding:' + Math.round(sz / 16) + 'px ' + Math.round(sz / 4.5)
-    + 'px;border-radius:' + radius + 'px;'
-    + 'letter-spacing:.03em;white-space:nowrap;">'
-    + badge + '</div>'
-    + '<div style="font-size:' + nfs + 'px;font-weight:600;text-align:center;margin-top:'
-    + Math.round(sz / 13) + 'px;'
-    + 'line-height:1.2;white-space:nowrap;">' + name + '</div>'
-    + '</div>';
+function orgEscape(s) {
+  return String(s).replace(/[&<>"]/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+  });
 }
 
-function renderOrgChart() {
-  var line = 'var(--border)';
-  var kids = ORG_CHART.reports[ORG_CHART.root] || [];
-  var rootSize = 56, leadSize = 50, branchSize = 46;
-  var stem = 18;   // vertical connector length
-  var gapX = 20;   // horizontal spacing between siblings
-  var gapY = 26;   // vertical spacing between wrapped rows
-
-  // IDs already drawn as their own node (GM, root, managers, leaders).
-  // Anyone in here is excluded from the team clusters so nobody is
-  // rendered twice — e.g. Bảo is LEAN IE's leader *and* a member.
+// IDs already drawn as their own node in the spine (GM, root, managers,
+// leaders). Anyone here is skipped inside the team lanes so nobody is
+// listed twice — e.g. Bảo is LEAN IE's leader *and* one of its members.
+function orgPlacedIds() {
   var placed = {};
   (function mark(id) {
     if (!id || placed[id]) return;
@@ -636,93 +685,139 @@ function renderOrgChart() {
     (ORG_CHART.reports[id] || []).forEach(mark);
   })(ORG_CHART.root);
   if (ORG_CHART.above && ORG_CHART.above.id) placed[ORG_CHART.above.id] = true;
+  return placed;
+}
 
-  // A team cluster: label on top, then its people in a row.
-  // leaderless=true pads the top with the height of the leader node
-  // it doesn't have, so its people line up with everyone else's staff.
-  function teamCluster(team, size, leaderless) {
+// team → the person who owns it, per ORG.teamsUnder (inverted).
+// Huy leads both TPM and TECHNOLOGY; ADMIN reports to the S.Manager.
+function orgLeaderOf(team) {
+  var found = null;
+  Object.keys(ORG_CHART.teamsUnder).forEach(function (id) {
+    if (ORG_CHART.teamsUnder[id].indexOf(team) >= 0 && !found) found = id;
+  });
+  return found;
+}
+
+// One person as a real <button>. `override` is for the GM, who isn't in
+// PEOPLE — disabled, since there is no plan to open for him.
+function orgNodeHtml(id, opts) {
+  opts = opts || {};
+  var p = orgPerson(id);
+  var name, pos, img, tier, sub;
+
+  if (opts.override) {
+    name = opts.name; pos = opts.label; img = opts.img; tier = 'gm'; sub = id;
+  } else if (p) {
+    name = orgShortName(p.name); pos = p.pos; img = 'avatars/' + p.id + '.jpg';
+    tier = ORG_TIER_KEY[pos] || 'staff'; sub = id;
+  } else {
+    return '';
+  }
+
+  var title = '';
+  if (opts.override) {
+    title = ' title="' + orgEscape(t(
+      pos + ' không có trong bảng nhân sự — không có kế hoạch cá nhân',
+      pos + ' is not in the employee table — no individual plan'
+    )) + '"';
+  }
+
+  return '<button type="button" class="orgc-node' + (opts.cls ? ' ' + opts.cls : '') + '"'
+    + ' data-org-person="' + orgEscape(id) + '"'
+    + ' data-org-tier="' + tier + '"'
+    + (opts.override ? ' disabled' : '') + title + '>'
+    + '<span class="orgc-av" data-ini="' + orgEscape((name.charAt(0) || '?').toUpperCase()) + '">'
+    + (img ? '<img src="' + img + '" alt="" loading="lazy">' : '')
+    + '</span>'
+    + '<span class="orgc-nm"><b>' + orgEscape(name) + '</b><i>' + orgEscape(sub) + '</i></span>'
+    + '<span class="orgc-chip">' + orgEscape(pos) + '</span>'
+    + '</button>';
+}
+
+function orgSpineHtml() {
+  var out = '<div class="orgc-spine">'
+    + '<p class="orgc-spine-label">' + t('Đường báo cáo', 'Reporting lines') + '</p><ol>';
+
+  if (ORG_CHART.above) {
+    out += '<li class="orgc-si" data-depth="0">'
+      + orgNodeHtml(ORG_CHART.above.id, {
+          override: true, label: ORG_CHART.above.label,
+          name: ORG_CHART.above.name, img: ORG_CHART.above.img
+        }) + '</li>';
+  }
+  function add(id, depth) {
+    var n = orgNodeHtml(id);
+    if (!n) return;
+    out += '<li class="orgc-si" data-depth="' + depth + '">' + n + '</li>';
+  }
+  add(ORG_CHART.root, 0);
+  // Two levels is all the current org has; deeper trees fall out of here.
+  (ORG_CHART.reports[ORG_CHART.root] || []).forEach(function (id) {
+    add(id, 1);
+    (ORG_CHART.reports[id] || []).forEach(function (cid) { add(cid, 2); });
+  });
+  return out + '</ol></div>';
+}
+
+function orgLanesHtml() {
+  var placed = orgPlacedIds();
+  // TEAMS first, then TEAM_UNASSIGNED (ADMIN) last.
+  var order = TEAMS.concat([TEAM_UNASSIGNED]);
+  var out = '<div class="orgc-lanes">';
+  var lanes = 0;
+
+  order.forEach(function (team) {
     var members = PEOPLE.filter(function (p) {
       return p.team === team && !placed[p.id];
     });
-    if (!members.length) return '';
-    var out = '<div style="display:flex;flex-direction:column;align-items:center;'
-      + 'justify-content:flex-end;">';
-    if (leaderless) {
-      // spacer matching node + badge + name block
-      out += '<div style="height:' + Math.round(size * 1.72) + 'px;"></div>';
-    }
-    out += '<div style="background:var(--ink-muted);color:#fff;font-size:11px;font-weight:700;'
-      + 'padding:3px 10px;border-radius:9px;letter-spacing:.04em;white-space:nowrap;">'
-      + orgTeamLabel(team) + '</div>';
-    out += '<div style="width:2px;height:12px;background:' + line + ';"></div>';
-    out += '<div style="display:flex;gap:' + gapX + 'px;flex-wrap:wrap;'
-      + 'justify-content:center;row-gap:' + (gapY - 6) + 'px;">';
-    members.forEach(function (p) { out += orgNodeHtml(p.id, size); });
+    if (!members.length) return;
+    lanes++;
+
+    out += '<div class="orgc-lane"><div class="orgc-lane-head">'
+      + '<div class="orgc-lt"><b>' + orgEscape(orgTeamLabel(team)) + '</b>'
+      + '<span>' + members.length + ' ' + t('người', 'people') + '</span></div>';
+
+    var lid = orgLeaderOf(team);
+    var leaderNode = lid ? orgNodeHtml(lid, { cls: 'orgc-lane-lead' }) : '';
+    out += leaderNode || '<span class="orgc-lane-none">'
+      + t('Không có trưởng nhóm', 'No group leader') + '</span>';
+
+    out += '</div><div class="orgc-lane-body">';
+    members.forEach(function (p) { out += orgNodeHtml(p.id); });
     out += '</div></div>';
-    return out;
-  }
+  });
+  return { html: out + '</div>', lanes: lanes };
+}
 
-  // Renders one node and, if it supervises teams, the connector +
-  // a row of team clusters.
-  function branch(id, size) {
-    var teams = ORG_CHART.teamsUnder[id] || [];
-    var reports = ORG_CHART.reports[id] || [];
-    var out = '<div style="display:flex;flex-direction:column;align-items:center;">';
-    out += orgNodeHtml(id, size);
-    var children = reports.map(function (cid) { return branch(cid, size - 8); })
-      .concat(teams.map(function (tm) { return teamCluster(tm, size - 10); }))
-      .filter(Boolean);
-    if (children.length) {
-      out += '<div style="width:2px;height:' + stem + 'px;background:' + line + ';"></div>';
-      out += '<div style="width:100%;border-top:2px solid ' + line + ';display:flex;'
-        + 'gap:' + (gapX + 6) + 'px;flex-wrap:wrap;justify-content:center;row-gap:' + gapY + 'px;">'
-        + children.join('') + '</div>';
-    }
-    out += '</div>';
-    return out;
-  }
+function renderOrgChart() {
+  var lanes = orgLanesHtml();
+  return '<div class="card orgc-card">'
+    + '<div class="orgc-head">'
+    + '<h2>' + t('Sơ đồ tổ chức', 'Organisation') + '</h2>'
+    + '<span class="orgc-count">' + PEOPLE.length + ' '
+      + t('người', 'people') + ' · ' + lanes.lanes + ' '
+      + t('nhóm', 'groups') + '</span>'
+    + '<span class="orgc-hint">'
+      + t('Bấm vào một người để xem kế hoạch cá nhân',
+          'Click a person to open their individual plan') + '</span>'
+    + '</div>'
+    + '<div class="orgc-split">' + orgSpineHtml() + lanes.html + '</div>'
+    + '</div>';
+}
 
-  var html = '<h2>' + t('Sơ đồ tổ chức', 'Org chart') + '</h2>';
-  html += '<div style="overflow-x:auto;padding:16px 12px 20px;">'
-    + '<div style="display:flex;flex-direction:column;align-items:center;min-width:min-content;">';
+// Avatar <img> elements fall back to initials on load failure. Attached
+// after each render rather than as an inline onerror handler.
+function bindOrgAvatars(root) {
+  root.querySelectorAll('.orgc-av img').forEach(function (img) {
+    img.addEventListener('error', function () { img.remove(); });
+  });
+}
 
-  // Optional GM node above the data root
-  if (ORG_CHART.above) {
-    html += orgNodeHtml(ORG_CHART.above.id, rootSize, ORG_CHART.above);
-    html += '<div style="width:2px;height:' + stem + 'px;background:' + line + ';"></div>';
-  }
-
-  html += orgNodeHtml(ORG_CHART.root, ORG_CHART.above ? leadSize : rootSize);
-  // The root hosts both its direct reports and any leaderless teams.
-  var rootTeams = (ORG_CHART.teamsUnder[ORG_CHART.root] || [])
-    .map(function (tm) { return teamCluster(tm, branchSize - 10, true); }).filter(Boolean);
-  var centre = kids.map(function (cid) { return branch(cid, branchSize); });
-  var barStyle = 'width:100%;border-top:2px solid ' + line + ';';
-
-  if (rootTeams.length) {
-    // Split the leaderless teams either side of the managers so the
-    // A.Manager stays on the vertical axis (grid: 1fr auto 1fr).
-    var split = Math.ceil(rootTeams.length / 2);
-    var left = rootTeams.slice(0, split);
-    var right = rootTeams.slice(split);
-    var cell = 'display:flex;gap:' + (gapX + 6) + 'px;flex-wrap:wrap;'
-      + 'justify-content:center;align-items:flex-end;row-gap:' + gapY + 'px;';
-    html += '<div style="width:2px;height:' + stem + 'px;background:' + line + ';"></div>';
-    html += '<div style="' + barStyle + 'display:grid;'
-      + 'grid-template-columns:1fr auto 1fr;column-gap:' + (gapX + 6) + 'px;'
-      + 'align-items:stretch;">'
-      + '<div style="' + cell + 'min-width:0;">' + left.join('') + '</div>'
-      + '<div style="' + cell + '">' + centre.join('') + '</div>'
-      + '<div style="' + cell + 'min-width:0;">' + right.join('') + '</div>'
-      + '</div>';
-  } else if (centre.length) {
-    html += '<div style="width:2px;height:' + stem + 'px;background:' + line + ';"></div>';
-    html += '<div style="' + barStyle + 'display:flex;gap:' + (gapX + 6) + 'px;'
-      + 'flex-wrap:wrap;justify-content:center;row-gap:' + gapY + 'px;">'
-      + centre.join('') + '</div>';
-  }
-  html += '</div></div>';
-  return html;
+// Opens the IDP page with this person already selected.
+function openPersonPlan(id) {
+  if (!orgPerson(id)) return;
+  idpPersonId = id;
+  navigate('idp');
 }
 
 // People in the CSV whose team isn't one of the LEAN_* teams.
@@ -1002,6 +1097,8 @@ var strictEvidence = false;
 var calMonth = 1;
 var courseYear = 2026;
 var courseRan = {};
+// Person preselected on the IDP page; set by clicking an org-chart node.
+var idpPersonId = null;
 var coursePass = {};
 var courseDecision = {};
 
@@ -1295,7 +1392,7 @@ function renderOverview(el) {
 
   // 0. Org chart (top of page)
   if (SHOW_ORG_CHART) {
-    html += '<div class="card" style="margin-bottom:20px;padding:20px 24px 24px;">' + renderOrgChart() + '</div>';
+    html += renderOrgChart();
   }
 
   // 1. Gap chart
@@ -1460,6 +1557,7 @@ function renderOverview(el) {
   html += '</div>';
 
   el.innerHTML = html;
+  if (SHOW_ORG_CHART) bindOrgAvatars(el);
 }
 
 // ═══════════════════════════════════════════
@@ -2052,13 +2150,20 @@ function renderIDP(el) {
   var html = '<h1>' + t('Kế hoạch phát triển cá nhân', 'Individual Development Plan & Year-over-Year Tracking') + '</h1>';
   html += '<p class="page-desc">' + t('Điểm đầu năm tự động lấy từ ma trận. Nhập điểm đánh giá lại cuối năm để so sánh sự phát triển.', 'Start-of-year score is pulled automatically from the matrix. Enter the end-of-year re-assessment score to compare growth.') + '</p>';
 
-  html += '<div style="margin-bottom:18px;"><label style="display:block;font-size:11.5px;color:var(--ink-muted);max-width:340px;">'+t('Chọn nhân viên','Select employee')+'<select id="idpSelect" onchange="renderIDPContent()" style="display:block;width:100%;margin-top:4px;border:1px solid var(--border);padding:6px 8px;background:#fff;color:var(--ink);"><option value="">-- '+t('Chọn người','Select person')+' --</option>';
+  html += '<div style="margin-bottom:18px;"><label style="display:block;font-size:11.5px;color:var(--ink-muted);max-width:340px;">'+t('Chọn nhân viên','Select employee')+'<select id="idpSelect" onchange="idpPersonId=this.value||null;renderIDPContent()" style="display:block;width:100%;margin-top:4px;border:1px solid var(--border);padding:6px 8px;background:#fff;color:var(--ink);"><option value="">-- '+t('Chọn người','Select person')+' --</option>';
   PEOPLE.forEach(function(p) {
     html += '<option value="'+p.id+'">'+p.name+' — '+p.team+' · '+p.pos+'</option>';
   });
   html += '</select></label></div>';
   html += '<div id="idpContent"></div>';
   el.innerHTML = html;
+
+  // Arriving from the org chart: preselect the person who was clicked.
+  var sel = document.getElementById('idpSelect');
+  if (idpPersonId && sel) {
+    sel.value = idpPersonId;
+    renderIDPContent();
+  }
 }
 
 function renderIDPContent() {
@@ -2658,6 +2763,13 @@ loadState();
 
 document.querySelectorAll('.nav-item').forEach(function(item) {
   item.addEventListener('click', function() { navigate(this.dataset.page); });
+});
+
+// Org-chart nodes → IDP. Delegated, so it survives every re-render.
+document.addEventListener('click', function (e) {
+  var n = e.target.closest('[data-org-person]');
+  if (!n || n.disabled) return;
+  openPersonPlan(n.getAttribute('data-org-person'));
 });
 
 setLang(lang);

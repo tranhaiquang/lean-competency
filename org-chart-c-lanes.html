@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C · Leadership spine + team lanes — ORG chart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* Hallmark · genre: modern-minimal · macrostructure: Workbench
+ * theme: design.md (SA1 locked tokens) · enrichment: none
+ * C — leadership spine (left) + team swimlanes (right). SELECTED and applied
+ * to index.html; this file is kept as a standalone reference of that design.
+ * The design it replaced is archived at org-chart-legacy-backup.html. */
+:root{
+  --primary:#2F4B9E; --primary-hover:#24407F; --primary-light:#4062B5;
+  --brand-bar:#4C6EF5; --brand-tint:#EAF0FE;
+  --level-0:#E8ECF7; --level-1:#C9D3EE; --level-2:#A3B4DE; --level-3:#6C86C4; --level-4:#2F4B9E;
+  --bg:#EFF1F8; --surface:#FFFFFF; --header:#EDEFF7;
+  --border:#EDEBF7; --row-border:#F3F2FA; --rule-strong:#D8D5EA;
+  --ink:#17202B; --ink-muted:#64717F; --ink-dim:#B7BFC8;
+  --evidence-flag:#F5A66E; --axis-soft:#1F6459; --axis-language:#F5A66E;
+  --positive:#2F7355; --negative:#B5493A;
+  --radius-card:20px; --radius-ctl:7px; --shadow-card:0 4px 18px rgba(31,53,115,.07);
+  --font:"Plus Jakarta Sans","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+  --ease-out:cubic-bezier(.16,1,.3,1); --dur-short:220ms;
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px; --sp-7:48px;
+
+  --tier-gm:#0E8074; --tier-smgr:#1D4ED8; --tier-amgr:#15803D;
+  --tier-lead:#15803D; --tier-staff:#2F4B9E;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{overflow-x:clip}
+body{
+  font-family:var(--font);font-size:13px;line-height:1.5;color:var(--ink);
+  background:var(--bg);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;
+}
+.shell{max-width:1180px;margin:0 auto;padding:var(--sp-5) var(--sp-5) var(--sp-7)}
+
+.pv-head{display:flex;flex-wrap:wrap;gap:var(--sp-3) var(--sp-4);align-items:center;margin-bottom:var(--sp-2)}
+.pv-head .tag{font-family:var(--mono);font-size:11px;color:var(--primary);background:var(--brand-tint);border-radius:999px;padding:4px 10px}
+.pv-head h1{font-size:22px;font-weight:700;letter-spacing:-.015em;font-style:normal}
+.pv-head .spacer{flex:1 1 auto}
+.pv-lede{color:var(--ink-muted);max-width:82ch;margin:0 0 var(--sp-5);font-size:12.5px}
+.btn-link{
+  font-family:var(--font);font-size:12px;color:var(--ink-muted);text-decoration:none;
+  border:1px solid var(--border);background:var(--surface);border-radius:var(--radius-ctl);
+  padding:6px 12px;cursor:pointer;transition:border-color var(--dur-short) var(--ease-out),color var(--dur-short) var(--ease-out);
+}
+.btn-link:hover{border-color:var(--rule-strong);color:var(--ink)}
+.btn-link:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+
+/* ── Split ─────────────────────────────────────────────────────── */
+.stage{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-card);
+  box-shadow:var(--shadow-card);padding:var(--sp-5);
+}
+.stage-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--sp-3);margin-bottom:var(--sp-4)}
+.stage-head h2{font-size:16px;font-weight:700;letter-spacing:-.01em;font-style:normal}
+.stage-head .count{font-family:var(--mono);font-size:11px;color:var(--ink-muted)}
+.stage-head .hint{margin-left:auto;font-size:11.5px;color:var(--ink-dim)}
+.split{display:grid;grid-template-columns:250px minmax(0,1fr);gap:var(--sp-5);align-items:start}
+
+/* ── Spine ────────────────────────────────────────────────────── */
+.spine{border-right:1px solid var(--border);padding-right:var(--sp-5)}
+.spine-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--ink-dim);margin-bottom:var(--sp-3)}
+.spine ol{list-style:none;display:flex;flex-direction:column;gap:0}
+.spine-item{position:relative;padding-left:18px;padding-bottom:var(--sp-4)}
+.spine-item::before{content:"";position:absolute;left:6px;top:14px;bottom:0;width:1px;background:var(--rule-strong)}
+.spine-item:last-child::before{display:none}
+.spine-item::after{content:"";position:absolute;left:6px;top:14px;width:7px;height:1px;background:var(--rule-strong)}
+.spine-item:first-child::after{display:none}
+.spine-item[data-depth="1"]{padding-left:34px}
+.spine-item[data-depth="1"]::before,.spine-item[data-depth="1"]::after{left:22px}
+.spine-item[data-depth="2"]{padding-left:50px}
+.spine-item[data-depth="2"]::before,.spine-item[data-depth="2"]::after{left:38px}
+
+.node{
+  display:flex;align-items:center;gap:var(--sp-3);width:100%;text-align:left;
+  padding:var(--sp-2);background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-ctl);cursor:pointer;font-family:var(--font);
+  transition:border-color var(--dur-short) var(--ease-out),background var(--dur-short) var(--ease-out),transform var(--dur-short) var(--ease-out);
+}
+.node:hover{border-color:var(--rule-strong);transform:translateX(2px)}
+.node:active{transform:translateX(0)}
+.node:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.node[disabled]{cursor:not-allowed;opacity:.66;transform:none;border-style:dashed}
+.node[aria-pressed="true"]{border-color:var(--primary);background:var(--brand-tint)}
+.av{position:relative;width:32px;height:32px;flex:0 0 auto;border-radius:50%;overflow:hidden;
+  background:var(--level-1);display:flex;align-items:center;justify-content:center}
+.av::after{content:attr(data-ini);font-size:12px;font-weight:700;color:var(--surface)}
+.av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}
+.node[data-tier="gm"]   .av{box-shadow:0 0 0 2px var(--tier-gm)}
+.node[data-tier="smgr"] .av{box-shadow:0 0 0 2px var(--tier-smgr)}
+.node[data-tier="amgr"] .av{box-shadow:0 0 0 2px var(--tier-smgr)}
+.node[data-tier="lead"] .av{box-shadow:0 0 0 2px var(--tier-lead)}
+.node[data-tier="staff"] .av{box-shadow:0 0 0 2px var(--level-2)}
+.nm{min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.nm b{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nm i{font-style:normal;font-family:var(--mono);font-size:10px;color:var(--ink-dim)}
+.chip{font-family:var(--mono);font-size:9.5px;margin-left:auto;flex:0 0 auto;border-radius:999px;padding:2px 7px;white-space:nowrap}
+.node[data-tier="gm"] .chip{background:color-mix(in oklab,var(--tier-gm) 12%,var(--surface));color:var(--tier-gm)}
+.node[data-tier="smgr"] .chip{background:color-mix(in oklab,var(--tier-smgr) 12%,var(--surface));color:var(--tier-smgr)}
+.node[data-tier="amgr"] .chip{background:color-mix(in oklab,var(--tier-amgr) 12%,var(--surface));color:var(--tier-amgr)}
+.node[data-tier="lead"] .chip{background:color-mix(in oklab,var(--tier-lead) 12%,var(--surface));color:var(--tier-lead)}
+.node[data-tier="staff"] .chip{background:var(--level-0);color:var(--ink-muted)}
+
+/* ── Lanes ────────────────────────────────────────────────────── */
+.lanes{display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:var(--sp-3)}
+.lane{display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--radius-ctl);overflow:hidden}
+.lane-head{padding:var(--sp-3);border-bottom:1px solid var(--border);background:var(--header)}
+.lane-head .t{display:flex;align-items:baseline;gap:var(--sp-2)}
+.lane-head .t b{font-family:var(--mono);font-size:12px;font-weight:500}
+.lane-head .t span{font-family:var(--mono);font-size:10.5px;color:var(--ink-dim);margin-left:auto}
+.lane-head .lead{margin-top:6px;display:block}
+.lane-body{padding:var(--sp-2);display:grid;gap:6px}
+.lane-body .node{border-color:transparent;background:var(--surface)}
+.lane-empty{padding:var(--sp-4) var(--sp-3);font-size:11.5px;color:var(--ink-dim);text-align:center}
+
+/* ── IDP panel ───────────────────────────────────────────────── */
+.panel{
+  position:fixed;inset:0 0 0 auto;width:min(440px,100%);z-index:40;
+  background:var(--surface);border-left:1px solid var(--border);
+  box-shadow:-8px 0 32px rgba(31,53,115,.12);display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform var(--dur-short) var(--ease-out);visibility:hidden;
+}
+.panel.is-open{transform:translateX(0);visibility:visible}
+.panel-head{display:flex;align-items:flex-start;gap:var(--sp-3);padding:var(--sp-5) var(--sp-5) var(--sp-4);border-bottom:1px solid var(--border)}
+.panel-head .nm{flex:1 1 auto}
+.panel-head h3{font-size:15px;font-weight:700;letter-spacing:-.01em;font-style:normal}
+.panel-head p{font-size:11.5px;color:var(--ink-muted);margin-top:2px}
+.x{background:none;border:1px solid var(--border);border-radius:var(--radius-ctl);width:28px;height:28px;
+  cursor:pointer;color:var(--ink-muted);font-size:15px;line-height:1;flex:0 0 auto;font-family:var(--font)}
+.x:hover{border-color:var(--rule-strong);color:var(--ink)}
+.x:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.panel-body{padding:var(--sp-5);overflow-y:auto;flex:1 1 auto}
+.panel-foot{padding:var(--sp-4) var(--sp-5);border-top:1px solid var(--border)}
+.btn-primary{display:block;text-align:center;text-decoration:none;font-size:12.5px;font-weight:600;
+  background:var(--primary);color:var(--surface);border-radius:var(--radius-ctl);padding:9px 14px}
+.btn-primary:hover{background:var(--primary-hover)}
+.btn-primary:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.scrim{position:fixed;inset:0;background:rgba(23,32,43,.28);z-index:39;opacity:0;visibility:hidden;
+  transition:opacity var(--dur-short) var(--ease-out),visibility var(--dur-short) var(--ease-out)}
+.scrim.is-open{opacity:1;visibility:visible}
+.state{display:none}.state.is-on{display:block}
+.state-loading .sk{height:12px;border-radius:4px;background:var(--level-0);margin-bottom:10px;animation:pulse 1.1s var(--ease-out) infinite}
+.state-loading .sk:nth-child(2){width:70%}
+.state-loading .sk:nth-child(3){width:45%;margin-bottom:var(--sp-4)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+.state-error{border-left:3px solid var(--negative);background:color-mix(in oklab,var(--negative) 6%,var(--surface));
+  padding:var(--sp-3) var(--sp-4);border-radius:0 var(--radius-ctl) var(--radius-ctl) 0}
+.state-error b{display:block;font-size:12.5px;font-weight:600;color:var(--negative);margin-bottom:2px}
+.state-error p{font-size:12px;color:var(--ink-muted)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:var(--sp-2) var(--sp-4);font-size:12px;margin-bottom:var(--sp-5)}
+.kv dt{color:var(--ink-muted)}.kv dd{font-weight:500;text-align:right}
+.blk{margin-bottom:var(--sp-5)}
+.blk>h4{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-dim);margin-bottom:var(--sp-2)}
+.axis-row{display:grid;grid-template-columns:96px 1fr auto;gap:var(--sp-3);align-items:center;padding:var(--sp-2) 0;border-top:1px solid var(--row-border)}
+.axis-row span{font-size:11.5px;color:var(--ink-muted)}
+.axis-row em{font-family:var(--mono);font-style:normal;font-size:11px;color:var(--ink-dim)}
+.dots{display:flex;flex-wrap:wrap;gap:3px}
+.dot{width:9px;height:9px;border-radius:2px;background:var(--level-0)}
+.dot[data-l="1"]{background:var(--level-1)}.dot[data-l="2"]{background:var(--level-2)}
+.dot[data-l="3"]{background:var(--level-3)}.dot[data-l="4"]{background:var(--level-4)}
+.empty{border:1px dashed var(--rule-strong);border-radius:var(--radius-ctl);padding:var(--sp-4);text-align:center}
+.empty b{display:block;font-size:12px;font-weight:600;margin-bottom:2px}
+.empty p{font-size:11.5px;color:var(--ink-muted)}
+
+@media (max-width:900px){
+  .split{grid-template-columns:minmax(0,1fr);gap:var(--sp-4)}
+  .spine{border-right:0;border-bottom:1px solid var(--border);padding-right:0;padding-bottom:var(--sp-4)}
+  .spine ol{flex-direction:row;flex-wrap:wrap;gap:var(--sp-2)}
+  .spine-item{padding-left:0;padding-bottom:0;flex:1 1 168px;min-width:0}
+  .spine-item::before,.spine-item::after{display:none}
+  .stage-head .hint{display:none}
+}
+@media (max-width:640px){
+  .shell{padding:var(--sp-4)}
+  .stage{padding:var(--sp-4)}
+  .lanes{grid-template-columns:minmax(0,1fr)}
+  .panel{inset:auto 0 0 0;width:100%;height:86vh;border-left:0;border-top:1px solid var(--border);
+    border-radius:var(--radius-card) var(--radius-card) 0 0;transform:translateY(100%)}
+  .panel.is-open{transform:translateY(0)}
+  .axis-row{grid-template-columns:80px 1fr auto;gap:var(--sp-2)}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="pv-head">
+    <span class="tag">Design C</span>
+    <h1>Leadership spine + team lanes</h1>
+    <span class="spacer"></span>
+    <button class="btn-link" data-open="org-chart-legacy-backup.html">See the old design</button>
+    <button class="btn-link" data-open="index.html">Open the app</button>
+  </div>
+  <p class="pv-lede">Two views of the same data, side by side: reporting lines as a vertical spine on the left, team membership as swimlanes on the right. Huy owning TPM and TECH reads at a glance, which a pure tree makes you trace for.</p>
+
+  <section class="stage">
+    <div class="stage-head">
+      <h2>Organisation</h2>
+      <span class="count" id="count"></span>
+      <span class="hint">Click any person to open their individual plan</span>
+    </div>
+    <div class="split">
+      <div class="spine">
+        <p class="spine-label">Reporting lines</p>
+        <ol id="spine"></ol>
+      </div>
+      <div class="lanes" id="lanes"></div>
+    </div>
+  </section>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="panel" id="panel" role="dialog" aria-modal="true" aria-labelledby="panelName" hidden>
+  <div class="panel-head">
+    <span class="av" id="panelAv"></span>
+    <span class="nm"><h3 id="panelName">—</h3><p id="panelMeta">—</p></span>
+    <button class="x" id="panelClose" aria-label="Close">×</button>
+  </div>
+  <div class="panel-body" id="panelBody"></div>
+  <div class="panel-foot"><a class="btn-primary" id="panelLink" href="index.html">Open in the app</a></div>
+</aside>
+
+<script>
+/* ── Data (mirrors index.html — single source of truth there) ────── */
+var TEAM_UNASSIGNED = 'Other';
+var TEAM_ORDER = ['LEAN IE','LEAN CI','LEAN TPM','LEAN TECHNOLOGY', TEAM_UNASSIGNED];
+
+var PEOPLE = [
+  { id:'12080610', name:'Nguyễn Thị Thanh Trang', team:'LEAN CI',         pos:'Team leader' },
+  { id:'14052701', name:'Nguyễn Thị Bích Liễu',   team:TEAM_UNASSIGNED,  pos:'Team leader' },
+  { id:'16031603', name:'Võ Thị Thủy Tiên',       team:'LEAN IE',         pos:'Staff' },
+  { id:'16111801', name:'Trần Thị Mỹ Diễm',       team:'LEAN CI',         pos:'Staff' },
+  { id:'21051708', name:'Chau Khách Huy',         team:'LEAN TECHNOLOGY', pos:'A.Manager' },
+  { id:'22022301', name:'Trương Thị Cẩm Tú',      team:'LEAN IE',         pos:'Staff' },
+  { id:'23032701', name:'Vương Quốc Bảo',         team:'LEAN IE',         pos:'Team leader' },
+  { id:'23040301', name:'Nguyễn Minh Quang',      team:TEAM_UNASSIGNED,  pos:'S.Manager' },
+  { id:'24031102', name:'Nguyễn Thanh Phương',    team:'LEAN TPM',        pos:'Staff' },
+  { id:'24091901', name:'Ngô Trần Phương Nguyên', team:'LEAN CI',         pos:'Staff' },
+  { id:'25040201', name:'Nguyễn Thanh Bình',      team:'LEAN CI',         pos:'Staff' },
+  { id:'25051501', name:'Lê Thị Hồng Vân',        team:'LEAN IE',         pos:'Staff' },
+  { id:'25102001', name:'Phạm Duy Hậu',           team:'LEAN TPM',        pos:'Staff' },
+  { id:'25102801', name:'Trần Hải Quang',         team:'LEAN TECHNOLOGY', pos:'Staff' },
+  { id:'25110301', name:'Nguyễn Thế Quân',        team:'LEAN CI',         pos:'Staff' },
+  { id:'26031603', name:'Đoàng Huỳnh Minh Trung', team:'LEAN TPM',        pos:'Staff' },
+  { id:'26061101', name:'Phạm Ngọc Minh',         team:'LEAN TECHNOLOGY', pos:'Staff' },
+  { id:'26070601', name:'Hoàng Minh Chiến',       team:'LEAN TECHNOLOGY', pos:'Staff' }
+];
+
+var ORG = {
+  above: { id:'SY', tier:'gm', label:'GM', name:'SY' },
+  root: '23040301',
+  reports: { '23040301':['21051708'], '21051708':['23032701','12080610'] },
+  teamsUnder: {
+    '21051708':['LEAN TPM','LEAN TECHNOLOGY'],
+    '23032701':['LEAN IE'],
+    '12080610':['LEAN CI'],
+    '23040301':[TEAM_UNASSIGNED]
+  }
+};
+
+var TEAM_LABEL = { 'LEAN IE':'IE','LEAN CI':'CI','LEAN TPM':'TPM','LEAN TECHNOLOGY':'TECH' };
+
+var SKILLS = [
+  {n:'6S',ax:'A'},{n:'8 Wastes',ax:'A'},{n:'GEMBA',ax:'A'},{n:'Time Study & ECRS',ax:'A'},{n:'VSM',ax:'A'},
+  {n:'Line Balancing',ax:'A'},{n:'QCO',ax:'A'},{n:'TPM',ax:'A'},{n:'Andon',ax:'A'},
+  {n:'KAIZEN',ax:'B'},{n:'PDCA / A3',ax:'B'},{n:'AutoCAD 2D',ax:'A'},{n:'SketchUp 3D',ax:'A'},{n:'TWI - Job Instruction',ax:'C'},
+  {n:'LSS Yellow Belt',ax:'B'},{n:'LSS Green Belt',ax:'B'},{n:'LSS Black Belt',ax:'B'},
+  {n:'Communication',ax:'C'},{n:'Active Listening',ax:'C'},{n:'Teamwork',ax:'C'},{n:'Problem Solving',ax:'C'},
+  {n:'Critical Thinking',ax:'C'},{n:'Leadership',ax:'C'},{n:'Presentation',ax:'C'},{n:'Feedback',ax:'C'},
+  {n:'Conflict Management',ax:'C'},{n:'AI Skills',ax:'C'},{n:'Foreign Language',ax:'C'}
+];
+
+var TARGET = {};
+TARGET['LEAN IE|Staff']       =[2,2,2,3,3,2,2,2,2,2,2,2,2,1,2,2,0,1,1,1,1,1,1,1,1,1,1,0];
+TARGET['LEAN IE|Team leader'] =[2,2,4,3,3,4,2,2,2,2,4,3,3,4,2,2,0,2,2,2,2,2,2,2,2,2,2,1];
+TARGET['LEAN IE|A.Manager']   =[2,2,3,3,3,3,2,2,2,2,3,2,2,3,2,2,0,2,2,2,2,2,2,2,2,2,2,0];
+TARGET['LEAN IE|S.Manager']   =[2,2,4,3,3,4,2,2,2,2,4,3,3,4,2,2,2,3,3,3,3,3,3,3,3,3,3,2];
+TARGET['LEAN CI|Staff']       =[3,2,2,2,2,1,2,2,2,3,3,2,2,1,2,2,0,1,1,1,1,1,1,1,1,1,1,0];
+TARGET['LEAN CI|Team leader'] =[3,2,4,2,2,3,2,2,2,3,4,3,3,4,2,2,0,2,2,2,2,2,2,2,2,2,2,1];
+TARGET['LEAN CI|A.Manager']   =[3,2,3,2,2,2,2,2,2,3,4,2,2,3,2,2,0,2,2,2,2,2,2,2,2,2,2,0];
+TARGET['LEAN CI|S.Manager']   =[3,2,4,2,2,3,2,2,2,3,4,3,3,4,2,2,2,3,3,3,3,3,3,3,3,3,3,2];
+TARGET['LEAN TECHNOLOGY|Staff']      =[2,2,2,2,2,1,3,3,3,2,2,2,2,1,2,2,0,1,1,1,1,1,1,1,1,1,1,0];
+TARGET['LEAN TECHNOLOGY|Team leader']=[2,2,4,2,2,3,3,3,3,2,4,3,3,4,2,2,0,2,2,2,2,2,2,2,2,2,2,1];
+TARGET['LEAN TECHNOLOGY|A.Manager']  =[2,2,3,2,2,2,3,3,3,2,3,2,2,3,2,2,0,2,2,2,2,2,2,2,2,2,2,0];
+TARGET['LEAN TECHNOLOGY|S.Manager']  =[2,2,4,2,2,3,3,3,3,2,4,3,3,4,2,2,2,3,3,3,3,3,3,3,3,3,3,2];
+TARGET['LEAN TPM|Staff']       =[2,2,2,2,2,1,3,3,3,2,2,2,2,1,2,2,0,1,1,1,1,1,1,1,1,1,1,0];
+TARGET['LEAN TPM|Team leader'] =[2,2,4,2,2,3,3,3,3,2,4,3,3,4,2,2,0,2,2,2,2,2,2,2,2,2,2,1];
+TARGET['LEAN TPM|A.Manager']   =[2,2,3,2,2,2,3,3,3,2,3,2,2,3,2,2,0,2,2,2,2,2,2,2,2,2,2,0];
+TARGET['LEAN TPM|S.Manager']   =[2,2,4,2,2,3,3,3,3,2,4,3,3,4,2,2,2,3,3,3,3,3,3,3,3,3,3,2];
+TARGET[TEAM_UNASSIGNED+'|Staff']       =[2,2,2,2,2,1,3,3,3,2,2,2,2,1,2,2,0,1,1,1,1,1,1,1,1,1,1,0];
+TARGET[TEAM_UNASSIGNED+'|Team leader'] =[2,2,4,2,2,3,3,3,3,2,4,3,3,4,2,2,0,2,2,2,2,2,2,2,2,2,2,1];
+TARGET[TEAM_UNASSIGNED+'|A.Manager']   =[2,2,3,2,2,2,3,3,3,2,3,2,2,3,2,2,0,2,2,2,2,2,2,2,2,2,2,0];
+TARGET[TEAM_UNASSIGNED+'|S.Manager']   =[2,2,4,2,2,3,3,3,3,2,4,3,3,4,2,2,2,3,3,3,3,3,3,3,3,3,3,2];
+
+/* ── Helpers ─────────────────────────────────────────────────────── */
+function el(tag, cls, txt) {
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (txt !== undefined && txt !== null) n.textContent = txt;
+  return n;
+}
+function person(id) { return PEOPLE.find(function (p) { return p.id === id; }) || null; }
+function shortName(full) { var p = full.trim().split(/\s+/); return p.length > 1 ? p[p.length - 1] : full; }
+function tierOf(pos) { return { 'GM':'gm','S.Manager':'smgr','A.Manager':'amgr','Team leader':'lead','Staff':'staff' }[pos] || 'staff'; }
+function teamLabel(t) { return t === TEAM_UNASSIGNED ? 'Admin' : (TEAM_LABEL[t] || t); }
+function escapeHtml(s) { return String(s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function placedIds() {
+  var placed = {};
+  (function mark(id) {
+    if (!id || placed[id]) return;
+    placed[id] = true;
+    (ORG.reports[id] || []).forEach(mark);
+  })(ORG.root);
+  return placed;
+}
+// team → the person who owns it, per ORG.teamsUnder (inverted)
+function leaderOf(team) {
+  var found = null;
+  Object.keys(ORG.teamsUnder).forEach(function (id) {
+    if (ORG.teamsUnder[id].indexOf(team) >= 0) found = found || id;
+  });
+  return found;
+}
+
+/* ── Node ────────────────────────────────────────────────────────── */
+function makeNode(id, opts) {
+  opts = opts || {};
+  var p = person(id);
+  var name, pos, img, tier, sub;
+
+  if (opts.override) { name = opts.name; pos = opts.label; img = opts.img; tier = 'gm'; sub = id; }
+  else if (p) { name = p.name; pos = p.pos; img = 'avatars/' + p.id + '.jpg'; tier = tierOf(pos); sub = id; }
+  else return null;
+
+  var btn = el('button', 'node');
+  btn.type = 'button';
+  btn.setAttribute('data-tier', tier);
+  btn.setAttribute('data-person', id);
+  if (opts.override) { btn.disabled = true; btn.title = 'Not in the employee table — no individual plan'; }
+
+  var av = el('span', 'av');
+  av.setAttribute('data-ini', (shortName(name).charAt(0) || '?').toUpperCase());
+  if (img) {
+    var im = document.createElement('img');
+    im.src = img; im.alt = ''; im.loading = 'lazy';
+    im.addEventListener('error', function () { im.remove(); });
+    av.appendChild(im);
+  }
+  var nm = el('span', 'nm');
+  nm.appendChild(el('b', null, shortName(name)));
+  nm.appendChild(el('i', null, sub));
+
+  btn.appendChild(av); btn.appendChild(nm); btn.appendChild(el('span', 'chip', pos));
+  return btn;
+}
+
+/* ── Spine ───────────────────────────────────────────────────────── */
+function renderSpine() {
+  var ol = document.getElementById('spine');
+  ol.textContent = '';
+
+  var gm = makeNode(ORG.above.id, { override:true, label:ORG.above.label, name:ORG.above.name, img:'avatars/SY.jpg' });
+  var li = el('li', 'spine-item');
+  li.setAttribute('data-depth', 0);
+  li.appendChild(gm);
+  ol.appendChild(li);
+
+  function add(id, depth) {
+    var n = makeNode(id);
+    if (!n) return;
+    var item = el('li', 'spine-item');
+    item.setAttribute('data-depth', depth);
+    item.appendChild(n);
+    ol.appendChild(item);
+  }
+  add(ORG.root, 0);
+  (ORG.reports[ORG.root] || []).forEach(function (id) {
+    add(id, 1);
+    (ORG.reports[id] || []).forEach(function (cid) { add(cid, 2); });
+  });
+}
+
+/* ── Lanes ───────────────────────────────────────────────────────── */
+function renderLanes() {
+  var host = document.getElementById('lanes');
+  host.textContent = '';
+  var placed = placedIds();
+
+  TEAM_ORDER.forEach(function (team) {
+    var members = PEOPLE.filter(function (p) { return p.team === team && !placed[p.id]; });
+    if (!members.length) return;
+
+    var lane = el('div', 'lane');
+    var head = el('div', 'lane-head');
+    var t = el('div', 't');
+    t.appendChild(el('b', null, teamLabel(team)));
+    t.appendChild(el('span', null, members.length + (members.length === 1 ? ' person' : ' people')));
+    head.appendChild(t);
+
+    var lid = leaderOf(team);
+    if (lid) {
+      var ln = makeNode(lid);
+      if (ln) { ln.classList.add('lead'); head.appendChild(ln); }
+    } else {
+      head.appendChild(el('span', 'lane-empty', 'No group leader'));
+    }
+    lane.appendChild(head);
+
+    var body = el('div', 'lane-body');
+    members.forEach(function (p) { var n = makeNode(p.id); if (n) body.appendChild(n); });
+    lane.appendChild(body);
+    host.appendChild(lane);
+  });
+
+  var lanes = host.querySelectorAll('.lane').length;
+  document.getElementById('count').textContent = PEOPLE.length + ' people · ' + lanes + ' lanes';
+}
+
+/* ── IDP panel ───────────────────────────────────────────────────── */
+var panel = document.getElementById('panel'), scrim = document.getElementById('scrim'), lastFocus = null;
+
+function openPanel(id) {
+  var p = person(id);
+  lastFocus = document.activeElement;
+  panel.hidden = false;
+  requestAnimationFrame(function () { panel.classList.add('is-open'); scrim.classList.add('is-open'); });
+
+  document.getElementById('panelName').textContent = p ? p.name : id;
+  document.getElementById('panelMeta').textContent = p ? (p.pos + ' · ' + p.team) : '';
+  var av = document.getElementById('panelAv');
+  av.textContent = '';
+  av.setAttribute('data-ini', (p ? shortName(p.name).charAt(0) : '?').toUpperCase());
+  if (p) {
+    var im = document.createElement('img');
+    im.src = 'avatars/' + p.id + '.jpg'; im.alt = '';
+    im.addEventListener('error', function () { im.remove(); });
+    av.appendChild(im);
+  }
+
+  var body = document.getElementById('panelBody');
+  body.innerHTML = '<div class="state state-loading is-on"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div>';
+  setTimeout(function () {
+    body.innerHTML = p ? renderPlan(p)
+      : '<div class="state state-error is-on"><b>No individual plan</b><p>' + escapeHtml(id)
+        + ' is not in the employee table, so there is no competency record or target profile to show.</p></div>';
+  }, 380);
+}
+
+function renderPlan(p) {
+  var tgt = TARGET[p.team + '|' + p.pos];
+  var out = '<dl class="kv">'
+    + '<dt>Employee ID</dt><dd>' + escapeHtml(p.id) + '</dd>'
+    + '<dt>Position</dt><dd>' + escapeHtml(p.pos) + '</dd>'
+    + '<dt>Team</dt><dd>' + escapeHtml(p.team) + '</dd>'
+    + '<dt>Competencies</dt><dd>' + SKILLS.length + '</dd>'
+    + '</dl>';
+
+  out += '<div class="blk"><h4>Required level by axis</h4>';
+  if (!tgt) {
+    out += '<div class="empty"><b>No target profile</b><p>Add a ' + escapeHtml(p.team + ' | ' + p.pos) + ' row to TARGET.</p></div>';
+  } else {
+    [['A','Technical'],['B','Application'],['C','Behavioral']].forEach(function (ax) {
+      var idx = SKILLS.map(function (s, i) { return s.ax === ax[0] ? i : -1; }).filter(function (i) { return i >= 0; });
+      out += '<div class="axis-row"><span>' + ax[1] + '</span><span class="dots">'
+        + idx.map(function (i) { return '<i class="dot" data-l="' + tgt[i] + '"></i>'; }).join('')
+        + '</span><em>' + idx.length + '</em></div>';
+    });
+  }
+  out += '</div>';
+
+  out += '<div class="blk"><h4>Current assessment</h4><div class="empty"><b>No score entered yet</b>'
+    + '<p>This roster carries null baselines — scores arrive from the cloud matrix. '
+    + 'Open the app to see this person\'s year-over-year plan.</p></div></div>';
+  return out;
+}
+
+function closePanel() {
+  panel.classList.remove('is-open'); scrim.classList.remove('is-open');
+  setTimeout(function () { panel.hidden = true; }, 220);
+  if (lastFocus && lastFocus.focus) lastFocus.focus();
+}
+document.getElementById('panelClose').addEventListener('click', closePanel);
+scrim.addEventListener('click', closePanel);
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && panel.classList.contains('is-open')) closePanel(); });
+
+document.addEventListener('click', function (e) {
+  var n = e.target.closest('.node');
+  if (n && !n.disabled) {
+    document.querySelectorAll('.node[aria-pressed]').forEach(function (x) { x.setAttribute('aria-pressed','false'); });
+    n.setAttribute('aria-pressed', 'true');
+    openPanel(n.getAttribute('data-person'));
+  }
+});
+document.querySelectorAll('[data-open]').forEach(function (b) {
+  b.addEventListener('click', function () { window.location.href = b.getAttribute('data-open'); });
+});
+
+renderSpine();
+renderLanes();
+</script>
+</body>
+</html>

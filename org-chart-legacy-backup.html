@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Legacy ORG chart (archived) — Lean Competency System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* ARCHIVE — this is the ORG chart as it shipped in index.html before the
+ * 2026-10-07 redesign. Kept for reference and rollback only.
+ *
+ * Preserved verbatim: ORG_TIER_COLOR, orgNodeHtml, renderOrgChart and the
+ * leaderless-spacer hack, including their inline style strings and their
+ * hardcoded hex. The redesign replaced these with .orgc-* CSS classes and
+ * the --tier-* custom properties; see index.html.
+ *
+ * Rollback: copy the "ORG CHART" block below back into index.html and set
+ * SHOW_ORG_CHART = true. git HEAD before the redesign also has it.
+ */
+:root {
+  --primary: #2F4B9E;
+  --primary-hover: #24407F;
+  --primary-light: #4062B5;
+  --brand-bar: #4C6EF5;
+  --brand-tint: #EAF0FE;
+  --bg: #EFF1F8;
+  --surface: #FFFFFF;
+  --header: #EDEFF7;
+  --border: #EDEBF7;
+  --row-border: #F3F2FA;
+  --rule-strong: #D8D5EA;
+  --ink: #17202B;
+  --ink-muted: #64717F;
+  --ink-dim: #B7BFC8;
+  --radius-card: 20px;
+  --radius-ctl: 7px;
+  --shadow-card: 0 4px 18px rgba(31, 53, 115, 0.07);
+  --font: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{overflow-x:clip}
+body{font-family:var(--font);font-size:13px;line-height:1.5;color:var(--ink);
+  background:var(--bg);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+.shell{max-width:1180px;margin:0 auto;padding:24px 24px 48px}
+h2{font-size:16px;font-weight:600;letter-spacing:-0.01em;margin:0 0 4px}
+.lede{color:var(--ink-muted);font-size:12.5px;max-width:82ch;margin:0 0 20px}
+.lede a{color:var(--primary)}
+.archive{background:var(--header);border-left:3px solid var(--primary);border-radius:0 var(--radius-ctl) var(--radius-ctl) 0;
+  padding:12px 16px;font-size:12px;color:var(--ink-muted);margin-bottom:20px}
+.archive b{color:var(--ink);font-weight:600}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-card);
+  padding:20px 24px 24px;box-shadow:var(--shadow-card)}
+</style>
+</head>
+<body>
+<div class="shell">
+  <h2>Legacy ORG chart — archived</h2>
+  <p class="lede">The pre-redesign chart, kept as-is. The live app now uses the leadership-spine + team-lanes design.
+    <a href="index.html">Back to the app</a> · <a href="org-chart-c-lanes.html">see the design that replaced it</a></p>
+  <p class="archive"><b>Archive notice.</b> Everything below this line is the original implementation, unmodified —
+    inline styles, hardcoded tier hex, and the <code>leaderless</code> spacer hack included. Nothing here is styled from
+    a design token. It is reference material, not shipped UI.</p>
+
+  <div class="card" id="mount"></div>
+</div>
+
+<script>
+/* ── Data ──────────────────────────────────────────────────────────── */
+var TEAM_UNASSIGNED = 'Other';
+var TEAMS = ['LEAN IE', 'LEAN CI', 'LEAN TPM', 'LEAN TECHNOLOGY'];
+
+var PEOPLE = [
+  { id: "12080610", name: "Nguyễn Thị Thanh Trang", team: "LEAN CI",         pos: "Team leader" },
+  { id: "14052701", name: "Nguyễn Thị Bích Liễu",   team: TEAM_UNASSIGNED,  pos: "Team leader" },
+  { id: "16031603", name: "Võ Thị Thủy Tiên",       team: "LEAN IE",         pos: "Staff" },
+  { id: "16111801", name: "Trần Thị Mỹ Diễm",       team: "LEAN CI",         pos: "Staff" },
+  { id: "21051708", name: "Chau Khách Huy",         team: "LEAN TECHNOLOGY", pos: "A.Manager" },
+  { id: "22022301", name: "Trương Thị Cẩm Tú",      team: "LEAN IE",         pos: "Staff" },
+  { id: "23032701", name: "Vương Quốc Bảo",         team: "LEAN IE",         pos: "Team leader" },
+  { id: "23040301", name: "Nguyễn Minh Quang",      team: TEAM_UNASSIGNED,  pos: "S.Manager" },
+  { id: "24031102", name: "Nguyễn Thanh Phương",    team: "LEAN TPM",        pos: "Staff" },
+  { id: "24091901", name: "Ngô Trần Phương Nguyên", team: "LEAN CI",         pos: "Staff" },
+  { id: "25040201", name: "Nguyễn Thanh Bình",      team: "LEAN CI",         pos: "Staff" },
+  { id: "25051501", name: "Lê Thị Hồng Vân",        team: "LEAN IE",         pos: "Staff" },
+  { id: "25102001", name: "Phạm Duy Hậu",           team: "LEAN TPM",        pos: "Staff" },
+  { id: "25102801", name: "Trần Hải Quang",         team: "LEAN TECHNOLOGY", pos: "Staff" },
+  { id: "25110301", name: "Nguyễn Thế Quân",        team: "LEAN CI",         pos: "Staff" },
+  { id: "26031603", name: "Đoàng Huỳnh Minh Trung", team: "LEAN TPM",        pos: "Staff" },
+  { id: "26061101", name: "Phạm Ngọc Minh",         team: "LEAN TECHNOLOGY", pos: "Staff" },
+  { id: "26070601", name: "Hoàng Minh Chiến",       team: "LEAN TECHNOLOGY", pos: "Staff" }
+];
+
+var lang = 'en';
+function t(vi, en) { return lang === 'vi' ? vi : (en || vi); }
+
+/* ══ BEGIN ORIGINAL ORG CHART (verbatim from index.html) ═════════════ */
+
+var SHOW_ORG_CHART = true;
+
+var ORG_CHART = {
+  root: '23040301',
+  reports: {
+    '23040301': ['21051708'],
+    '21051708': ['23032701', '12080610']
+  },
+  teamsUnder: {
+    '21051708': ['LEAN TPM', 'LEAN TECHNOLOGY'],
+    '23032701': ['LEAN IE'],
+    '12080610': ['LEAN CI'],
+    '23040301': [TEAM_UNASSIGNED]
+  },
+  above: { id: 'SY', label: 'GM', name: 'SY', img: 'avatars/SY.jpg' }
+};
+
+var ORG_TEAM_LABEL = {
+  'LEAN IE':         'IE',
+  'LEAN CI':         'CI',
+  'LEAN TPM':        'TPM',
+  'LEAN TECHNOLOGY': 'TECH'
+};
+function orgTeamLabel(team) {
+  if (team === TEAM_UNASSIGNED) return 'Admin';
+  return ORG_TEAM_LABEL[team] || team;
+}
+
+var ORG_TIER_COLOR = {
+  'GM': '#0E8074', 'S.Manager': '#1D4ED8', 'A.Manager': '#15803D',
+  'Team leader': '#15803D', 'Staff': '#2F4B9E'
+};
+
+function orgPerson(id) {
+  return PEOPLE.find(function (p) { return p.id === id; }) || null;
+}
+
+function orgShortName(full) {
+  var parts = full.trim().split(/\s+/);
+  return parts.length > 1 ? parts[parts.length - 1] : full;
+}
+
+function orgNodeHtml(id, size, override) {
+  var p = orgPerson(id);
+  var badge, name, img;
+  if (override) {
+    badge = override.label || 'Staff';
+    name = override.name || id;
+    img = override.img || '';
+  } else if (p) {
+    badge = p.pos; name = orgShortName(p.name); img = 'avatars/' + p.id + '.jpg';
+  } else {
+    badge = 'Staff'; name = id; img = '';
+  }
+  var color = ORG_TIER_COLOR[badge] || '#2F4B9E';
+  var sz = size || 44;
+  var fs = Math.round(sz * 0.21 * 10) / 10;
+  var nfs = Math.round(sz * 0.26 * 10) / 10;
+  var ring = Math.max(2, Math.round(sz / 20));
+  var gap = Math.round(sz / 8);
+  var radius = Math.round(sz / 5);
+  var initial = (name.charAt(0) || '?');
+  var avatar
+    = '<img src="' + img + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;"'
+      + ' onerror="this.style.display=\'none\';this.parentNode.querySelector(\'.org-init\').style.display=\'flex\';">'
+      + '<span class="org-init" style="display:none;position:absolute;inset:0;align-items:center;'
+      + 'justify-content:center;font-size:' + Math.round(sz / 2.4) + 'px;font-weight:700;color:#fff;">'
+      + initial + '</span>';
+
+  return '<div style="display:flex;flex-direction:column;align-items:center;">'
+    + '<div style="position:relative;width:' + sz + 'px;height:' + sz + 'px;flex:0 0 auto;'
+    + 'border-radius:50%;box-shadow:0 0 0 ' + ring + 'px var(--surface),0 0 0 '
+    + (ring * 2) + 'px ' + color + ';">'
+    + avatar + '</div>'
+    + '<div style="margin-top:' + gap + 'px;background:' + color + ';color:#fff;font-size:' + fs + 'px;'
+    + 'font-weight:700;padding:' + Math.round(sz / 16) + 'px ' + Math.round(sz / 4.5)
+    + 'px;border-radius:' + radius + 'px;'
+    + 'letter-spacing:.03em;white-space:nowrap;">'
+    + badge + '</div>'
+    + '<div style="font-size:' + nfs + 'px;font-weight:600;text-align:center;margin-top:'
+    + Math.round(sz / 13) + 'px;'
+    + 'line-height:1.2;white-space:nowrap;">' + name + '</div>'
+    + '</div>';
+}
+
+function renderOrgChart() {
+  var line = 'var(--border)';
+  var kids = ORG_CHART.reports[ORG_CHART.root] || [];
+  var rootSize = 56, leadSize = 50, branchSize = 46;
+  var stem = 18;
+  var gapX = 20;
+  var gapY = 26;
+
+  var placed = {};
+  (function mark(id) {
+    if (!id || placed[id]) return;
+    placed[id] = true;
+    (ORG_CHART.reports[id] || []).forEach(mark);
+  })(ORG_CHART.root);
+  if (ORG_CHART.above && ORG_CHART.above.id) placed[ORG_CHART.above.id] = true;
+
+  function teamCluster(team, size, leaderless) {
+    var members = PEOPLE.filter(function (p) {
+      return p.team === team && !placed[p.id];
+    });
+    if (!members.length) return '';
+    var out = '<div style="display:flex;flex-direction:column;align-items:center;'
+      + 'justify-content:flex-end;">';
+    if (leaderless) {
+      out += '<div style="height:' + Math.round(size * 1.72) + 'px;"></div>';
+    }
+    out += '<div style="background:var(--ink-muted);color:#fff;font-size:11px;font-weight:700;'
+      + 'padding:3px 10px;border-radius:9px;letter-spacing:.04em;white-space:nowrap;">'
+      + orgTeamLabel(team) + '</div>';
+    out += '<div style="width:2px;height:12px;background:' + line + ';"></div>';
+    out += '<div style="display:flex;gap:' + gapX + 'px;flex-wrap:wrap;'
+      + 'justify-content:center;row-gap:' + (gapY - 6) + 'px;">';
+    members.forEach(function (p) { out += orgNodeHtml(p.id, size); });
+    out += '</div></div>';
+    return out;
+  }
+
+  function branch(id, size) {
+    var teams = ORG_CHART.teamsUnder[id] || [];
+    var reports = ORG_CHART.reports[id] || [];
+    var out = '<div style="display:flex;flex-direction:column;align-items:center;">';
+    out += orgNodeHtml(id, size);
+    var children = reports.map(function (cid) { return branch(cid, size - 8); })
+      .concat(teams.map(function (tm) { return teamCluster(tm, size - 10); }))
+      .filter(Boolean);
+    if (children.length) {
+      out += '<div style="width:2px;height:' + stem + 'px;background:' + line + ';"></div>';
+      out += '<div style="width:100%;border-top:2px solid ' + line + ';display:flex;'
+        + 'gap:' + (gapX + 6) + 'px;flex-wrap:wrap;justify-content:center;row-gap:' + gapY + 'px;">'
+        + children.join('') + '</div>';
+    }
+    out += '</div>';
+    return out;
+  }
+
+  var html = '<h2>' + t('Sơ đồ tổ chức', 'Org chart') + '</h2>';
+  html += '<div style="overflow-x:auto;padding:16px 12px 20px;">'
+    + '<div style="display:flex;flex-direction:column;align-items:center;min-width:min-content;">';
+
+  if (ORG_CHART.above) {
+    html += orgNodeHtml(ORG_CHART.above.id, rootSize, ORG_CHART.above);
+    html += '<div style="width:2px;height:' + stem + 'px;background:' + line + ';"></div>';
+  }
+
+  html += orgNodeHtml(ORG_CHART.root, ORG_CHART.above ? leadSize : rootSize);
+  var rootTeams = (ORG_CHART.teamsUnder[ORG_CHART.root] || [])
+    .map(function (tm) { return teamCluster(tm, branchSize - 10, true); }).filter(Boolean);
+  var centre = kids.map(function (cid) { return branch(cid, branchSize); });
+  var barStyle = 'width:100%;border-top:2px solid ' + line + ';';
+
+  if (rootTeams.length) {
+    var split = Math.ceil(rootTeams.length / 2);
+    var left = rootTeams.slice(0, split);
+    var right = rootTeams.slice(split);
+    var cell = 'display:flex;gap:' + (gapX + 6) + 'px;flex-wrap:wrap;'
+      + 'justify-content:center;align-items:flex-end;row-gap:' + gapY + 'px;';
+    html += '<div style="width:2px;height:' + stem + 'px;background:' + line + ';"></div>';
+    html += '<div style="' + barStyle + 'display:grid;'
+      + 'grid-template-columns:1fr auto 1fr;column-gap:' + (gapX + 6) + 'px;'
+      + 'align-items:stretch;">'
+      + '<div style="' + cell + 'min-width:0;">' + left.join('') + '</div>'
+      + '<div style="' + cell + '">' + centre.join('') + '</div>'
+      + '<div style="' + cell + 'min-width:0;">' + right.join('') + '</div>'
+      + '</div>';
+  } else if (centre.length) {
+    html += '<div style="width:2px;height:' + stem + 'px;background:' + line + ';"></div>';
+    html += '<div style="' + barStyle + 'display:flex;gap:' + (gapX + 6) + 'px;'
+      + 'flex-wrap:wrap;justify-content:center;row-gap:' + gapY + 'px;">'
+      + centre.join('') + '</div>';
+  }
+  html += '</div></div>';
+  return html;
+}
+
+/* ══ END ORIGINAL ORG CHART ══════════════════════════════════════════ */
+
+document.getElementById('mount').innerHTML = renderOrgChart();
+</script>
+</body>
+</html>

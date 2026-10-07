@@ -21,7 +21,7 @@ No server required. No install steps.
 
 - **8 pages**: Overview, Competency Matrix, Scale, Training Calendar, Courses, Individual Plan, GL Proposals, Exam Scores
 - **Rendering**: each page has a `renderXxx(el)` function that writes HTML into `#mainContent`
-  - Overview: `renderDashboard(el)` → Gap chart → KPI row → Team Trends (3 SVG charts) → By Function → By Tier → Donut → Courses Run
+  - Overview: `renderDashboard(el)` → Org chart → Gap chart → KPI row → Team Trends (3 SVG charts) → By Function → By Tier → Donut → Courses Run
   - Competency Matrix: `renderMatrix(el)` → sticky table with skill headers
   - Scale: `renderScale(el)` → 5-level cards with gradient purple + evidence rules + 2-column core skills & axes
   - Training Calendar: `renderCalendar(el)` → month filter + session cards + detail sidebar
@@ -33,6 +33,28 @@ No server required. No install steps.
 - **State**: all edits stored in `localStorage` (`lean_competency_v20` key)
 - **Init order**: `loadState()` → `setLang(lang)` → `renderPage()` → attach sidebar listeners
 - **i18n**: `t(vi, en)` helper; `lang` variable toggles Vietnamese/English; sidebar uses `data-i18n` attributes with `updateSidebar()` and `NAV_I18N` map
+
+## Org chart (top of Overview)
+
+Design C — **leadership spine + team lanes**. Reporting lines run down a spine on
+the left; team membership runs across swimlanes on the right. Toggled with
+`SHOW_ORG_CHART`.
+
+- **Data**: `ORG_CHART` (`root` / `reports` / `teamsUnder` / `above`), `ORG_TEAM_LABEL`
+- **Render**: `renderOrgChart()` → `orgSpineHtml()` + `orgLanesHtml()` → `orgNodeHtml()`
+- **Helpers**: `orgPlacedIds()` (IDs already drawn as nodes, so nobody is
+  listed twice), `orgLeaderOf(team)` (inverts `teamsUnder`; Huy leads both TPM
+  and TECHNOLOGY)
+- **Styling**: `.orgc-*` CSS classes. Depth is `data-depth`, tier is
+  `data-org-tier`. **No inline styles, no colour map in JS** — tier colour comes
+  from the `--tier-*` tokens
+- **Interaction**: nodes are `<button data-org-person="ID">`. One delegated
+  listener in INIT calls `openPersonPlan(id)`, which sets `idpPersonId` and
+  `navigate('idp')`; `renderIDP` then preselects the person
+- **Avatar fallback**: `bindOrgAvatars(el)` attaches `error` listeners after each
+  render (the `.orgc-av::after` initial shows through) — never an inline `onerror`
+- The GM is not in `PEOPLE`, so his node renders **disabled** — no plan to open
+- Previous inline-style tree archived at `org-chart-legacy-backup.html`
 
 ## Data (hardcoded JS arrays)
 

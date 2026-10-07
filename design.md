@@ -80,7 +80,26 @@ modern-minimal
 - Positive: `#2F7355` · Negative: `#B5493A`
 - Evidence flag: `#F5A66E`
 - Org-chart tiers: GM `#0E8074`, S.Manager `#1D4ED8`, A.Manager `#15803D`,
-  Team leader `#15803D`, Staff `#2F4B9E`
+  Team leader `#15803D`, Staff `#2F4B9E` — exposed as `--tier-*` tokens, never
+  as a JS colour map
+
+## Org chart
+
+Redesigned 2026-10-07 to **Design C — leadership spine + team lanes**.
+Reporting lines read down a vertical spine on the left; team membership reads
+across swimlanes on the right. Two views of the same `ORG_CHART` data, which is
+what makes Huy owning both TPM and TECHNOLOGY legible at a glance.
+
+- Split layout: spine `250px` | lanes `minmax(0,1fr)`, collapsing to one column
+  at 900 px
+- Lanes are `repeat(auto-fit, minmax(196px, 1fr))`, one column at 640 px
+- Nodes are real `<button>`s with hover / focus-visible / active / disabled.
+  Disabled = the GM, who has no record in `employees` and so has no plan
+- Depth is `data-depth` on the spine item — no inline custom properties
+- Tier colour is applied purely by `data-org-tier` + `--tier-*`
+- Clicking a node preselects that person on the IDP page (`idpPersonId`)
+- The previous inline-style tree is archived at `org-chart-legacy-backup.html`;
+  `git HEAD` before the redesign also has it
 
 ## Hardcoded colour policy
 All UI colour must come from a custom property. The remaining literal hex
@@ -109,6 +128,10 @@ tokens when touched; do not add new ones.
   --evidence-flag: #F5A66E;
   --axis-lean: #2F4B9E;  --axis-soft: #1F6459;  --axis-language: #F5A66E;
   --positive: #2F7355;  --negative: #B5493A;
+
+  /* Org-chart tiers */
+  --tier-gm: #0E8074;  --tier-smgr: #1D4ED8;  --tier-amgr: #15803D;
+  --tier-lead: #15803D;  --tier-staff: #2F4B9E;
 
   --radius-card: 20px;  --radius-ctl: 7px;
   --shadow-card: 0 4px 18px rgba(31, 53, 115, 0.07);
