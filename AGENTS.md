@@ -49,8 +49,14 @@ the left; team membership runs across swimlanes on the right. Toggled with
   `data-org-tier`. **No inline styles, no colour map in JS** — tier colour comes
   from the `--tier-*` tokens
 - **Interaction**: nodes are `<button data-org-person="ID">`. One delegated
-  listener in INIT calls `openPersonPlan(id)`, which sets `idpPersonId` and
-  `navigate('idp')`; `renderIDP` then preselects the person
+  listener in INIT calls `openOrgPanel(id)` — a right-hand drawer
+  (`.orgc-panel` + `.orgc-scrim`, `.is-open`) showing the person's summary.
+  The panel's primary button sets `idpPersonId` and `navigate('idp')`, where
+  `renderIDP` preselects that person. Escape / scrim / × closes the drawer.
+- **Structure**: four Team leaders report to the S.Manager: Huy (TPM + TECH),
+  Bảo (IE), Trang (CI), Liễu (ADMIN). The ADMIN lane renders as a leader node
+  in the spine, not a staff card — the lane itself is skipped because it has no
+  unplaced staff.
 - **Avatar fallback**: `bindOrgAvatars(el)` attaches `error` listeners after each
   render (the `.orgc-av::after` initial shows through) — never an inline `onerror`
 - The GM is not in `PEOPLE`, so his node renders **disabled** — no plan to open

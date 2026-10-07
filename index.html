@@ -293,6 +293,65 @@ td.met-col { text-align: right; font-size: 11.5px; color: var(--ink-muted); back
 }
 @media (prefers-reduced-motion: reduce) {
   .orgc-node { transition: none; }
+  .orgc-panel, .orgc-scrim { transition: none; }
+}
+
+/* ORG person panel — right drawer, mirrors org-chart-c-lanes.html */
+.orgc-scrim { position: fixed; inset: 0; background: rgba(23,32,43,.28); z-index: 39;
+  opacity: 0; visibility: hidden; transition: opacity 220ms var(--ease-out), visibility 220ms var(--ease-out); }
+.orgc-scrim.is-open { opacity: 1; visibility: visible; }
+.orgc-panel { position: fixed; inset: 0 0 0 auto; width: min(440px,100%); z-index: 40;
+  background: var(--surface); border-left: 1px solid var(--border);
+  box-shadow: -8px 0 32px rgba(31,53,115,.12); display: flex; flex-direction: column;
+  transform: translateX(100%); transition: transform 220ms var(--ease-out); visibility: hidden; }
+.orgc-panel.is-open { transform: translateX(0); visibility: visible; }
+.orgc-panel-head { display: flex; align-items: flex-start; gap: 12px; padding: 24px 24px 16px; border-bottom: 1px solid var(--border); }
+.orgc-panel-head .orgc-nm { flex: 1 1 auto; }
+.orgc-panel-head h3 { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; margin: 0; }
+.orgc-panel-head p { font-size: 11.5px; color: var(--ink-muted); margin: 2px 0 0; }
+.orgc-x { background: none; border: 1px solid var(--border); border-radius: var(--radius-ctl); width: 28px; height: 28px;
+  cursor: pointer; color: var(--ink-muted); font-size: 15px; line-height: 1; flex: 0 0 auto; font-family: var(--font); }
+.orgc-x:hover { border-color: var(--rule-strong); color: var(--ink); }
+.orgc-x:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.orgc-panel-body { padding: 24px; overflow-y: auto; flex: 1 1 auto; }
+.orgc-panel-foot { padding: 16px 24px; border-top: 1px solid var(--border); }
+.orgc-btn-primary { display: block; width: 100%; text-align: center; text-decoration: none; font-size: 12.5px; font-weight: 600;
+  background: var(--primary); color: var(--surface); border: 0; border-radius: var(--radius-ctl); padding: 9px 14px; cursor: pointer; font-family: var(--font); }
+.orgc-btn-primary:hover { background: var(--primary-hover); }
+.orgc-btn-primary:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+.orgc-state { display: none; }
+.orgc-state.is-on { display: block; }
+.orgc-state-loading .sk { height: 12px; border-radius: 4px; background: var(--level-0); margin-bottom: 10px; animation: orgc-pulse 1.1s var(--ease-out) infinite; }
+.orgc-state-loading .sk:nth-child(2) { width: 70%; }
+.orgc-state-loading .sk:nth-child(3) { width: 45%; margin-bottom: 24px; }
+@keyframes orgc-pulse { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
+.orgc-state-error { border-left: 3px solid var(--negative); background: color-mix(in oklab, var(--negative) 6%, var(--surface));
+  padding: 12px 16px; border-radius: 0 var(--radius-ctl) var(--radius-ctl) 0; }
+.orgc-state-error b { display: block; font-size: 12.5px; font-weight: 600; color: var(--negative); margin-bottom: 2px; }
+.orgc-state-error p { font-size: 12px; color: var(--ink-muted); margin: 0; }
+
+.orgc-kv { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 12px; margin: 0 0 24px; }
+.orgc-kv dt { color: var(--ink-muted); }
+.orgc-kv dd { font-weight: 500; text-align: right; margin: 0; }
+.orgc-blk { margin-bottom: 24px; }
+.orgc-blk > h4 { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-dim); margin: 0 0 8px; }
+.orgc-axis-row { display: grid; grid-template-columns: 96px 1fr auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid var(--row-border); }
+.orgc-axis-row span { font-size: 11.5px; color: var(--ink-muted); }
+.orgc-axis-row em { font-family: var(--mono); font-style: normal; font-size: 11px; color: var(--ink-dim); }
+.orgc-dots { display: flex; flex-wrap: wrap; gap: 3px; }
+.orgc-dot { width: 9px; height: 9px; border-radius: 2px; background: var(--level-0); }
+.orgc-dot[data-l="1"] { background: var(--level-1); } .orgc-dot[data-l="2"] { background: var(--level-2); }
+.orgc-dot[data-l="3"] { background: var(--level-3); } .orgc-dot[data-l="4"] { background: var(--level-4); }
+.orgc-empty { border: 1px dashed var(--rule-strong); border-radius: var(--radius-ctl); padding: 16px; text-align: center; }
+.orgc-empty b { display: block; font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+.orgc-empty p { font-size: 11.5px; color: var(--ink-muted); margin: 0; }
+
+@media (max-width: 640px) {
+  .orgc-panel { inset: auto 0 0 0; width: 100%; height: 86vh; border-left: 0; border-top: 1px solid var(--border);
+    border-radius: var(--radius-card) var(--radius-card) 0 0; transform: translateY(100%); }
+  .orgc-panel.is-open { transform: translateY(0); }
+  .orgc-axis-row { grid-template-columns: 80px 1fr auto; gap: 8px; }
 }
 
 /* ═══ KPI ROW ═══ */
@@ -551,6 +610,23 @@ select { padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px;
   </main>
 </div>
 
+<!-- ORG person drawer (mirrors org-chart-c-lanes.html) -->
+<div class="orgc-scrim" id="orgcScrim"></div>
+<aside class="orgc-panel" id="orgcPanel" role="dialog" aria-modal="true" aria-labelledby="orgcPanelName">
+  <div class="orgc-panel-head">
+    <span class="orgc-av" id="orgcPanelAv"></span>
+    <span class="orgc-nm">
+      <h3 id="orgcPanelName">—</h3>
+      <p id="orgcPanelMeta">—</p>
+    </span>
+    <button class="orgc-x" id="orgcPanelClose" aria-label="Close">×</button>
+  </div>
+  <div class="orgc-panel-body" id="orgcPanelBody"></div>
+  <div class="orgc-panel-foot">
+    <button class="orgc-btn-primary" id="orgcPanelOpen">Open full plan</button>
+  </div>
+</aside>
+
 <script>
 // ═══════════════════════════════════════════
 // DATA — from original Claude artifact
@@ -596,19 +672,19 @@ var TEAM_UNASSIGNED = "Other";
 // Reporting lines confirmed: IE → Bảo, CI → Trang, TECHNOLOGY + TPM →
 // Huy; all three Team leaders report to the S.Manager. ADMIN has no
 // Team leader and sits on the staff line.
+// NOTE: Liễu was promoted to ADMIN Team leader 2026-10-07 — see ORG_CHART.
 var SHOW_ORG_CHART = true;
 // ── ORG CHART ─────────────────────────────────────────────────
 // Reporting lines, taken from the SA1 org chart and mapped onto the
 // employee IDs in PEOPLE[]. 18 people, 4 tiers — the A.Manager layer
-// was removed 2026-10-07 (Huy became a Team Leader), so the three
+// was removed 2026-10-07 (Huy became a Team Leader), so the four
 // team leaders are now siblings under the S.Manager.
 //
 //   Nguyễn Minh Quang   (S.Manager)
 //   ├─ Chau Khách Huy          (Team leader · LEAN TPM + LEAN TECHNOLOGY)
 //   ├─ Vương Quốc Bảo         (Team leader · LEAN IE)
-//   └─ Nguyễn Thị Thanh Trang (Team leader · LEAN CI)
-//
-// ADMIN (Liễu) has no Team leader and sits directly under Quang.
+//   ├─ Nguyễn Thị Thanh Trang (Team leader · LEAN CI)
+//   └─ Nguyễn Thị Bích Liễu   (Team leader · ADMIN)
 //
 // ⚠ Reporting lines are organisational facts — verify them. They
 // are NOT derived from employees.team (Huy supervises two teams).
@@ -619,16 +695,14 @@ var ORG_CHART = {
   reports: {
     // Flat since the A.Manager layer was removed. Seniority order is now
     // S.Manager → Team leader → Staff.
-    '23040301': ['21051708', '23032701', '12080610']  // → the three Team leaders
+    '23040301': ['21051708', '23032701', '12080610', '14052701']  // → the four Team leaders
   },
   // Leader → the team(s) they own. Mirrors TEAM_GL.
-  // ADMIN has no Team leader, so its member is placed directly on the
-  // staff line instead of under a leader node.
   teamsUnder: {
     '21051708': ['LEAN TPM', 'LEAN TECHNOLOGY'],  // Chau Khách Huy leads both
     '23032701': ['LEAN IE'],                     // Vương Quốc Bảo
     '12080610': ['LEAN CI'],                     // Nguyễn Thị Thanh Trang
-    '23040301': [TEAM_UNASSIGNED]                // ADMIN — no Team leader
+    '14052701': [TEAM_UNASSIGNED]                // Liễu leads ADMIN
   },
   // Not in the employees table; drop this node to start at Quang.
   above: { id: 'SY', label: 'GM', name: 'SY', img: 'avatars/SY.jpg' }
@@ -810,11 +884,102 @@ function bindOrgAvatars(root) {
   });
 }
 
-// Opens the IDP page with this person already selected.
-function openPersonPlan(id) {
-  if (!orgPerson(id)) return;
-  idpPersonId = id;
-  navigate('idp');
+// Opens the right-hand drawer with this person's summary. Full plan is
+// still reachable via the button in the panel footer.
+var orgcPanel = document.getElementById('orgcPanel');
+var orgcScrim = document.getElementById('orgcScrim');
+var orgcLastFocus = null;
+
+function openOrgPanel(id) {
+  var p = orgPerson(id);
+  if (!p) return;
+  orgcLastFocus = document.activeElement;
+
+  document.getElementById('orgcPanelName').textContent = p.name;
+  document.getElementById('orgcPanelMeta').textContent = p.pos + ' · ' + p.team;
+
+  var av = document.getElementById('orgcPanelAv');
+  av.textContent = '';
+  av.setAttribute('data-ini', (orgShortName(p.name).charAt(0) || '?').toUpperCase());
+  var im = document.createElement('img');
+  im.src = 'avatars/' + p.id + '.jpg'; im.alt = '';
+  im.addEventListener('error', function () { im.remove(); });
+  av.appendChild(im);
+
+  // Mark the triggering node as pressed
+  document.querySelectorAll('[data-org-person][aria-pressed]').forEach(function (n) {
+    n.setAttribute('aria-pressed', 'false');
+  });
+  var node = document.querySelector('[data-org-person="' + id + '"]');
+  if (node) node.setAttribute('aria-pressed', 'true');
+
+  var body = document.getElementById('orgcPanelBody');
+  body.innerHTML =
+    '<div class="orgc-state orgc-state-loading is-on"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div>';
+
+  orgcPanel.classList.add('is-open');
+  orgcScrim.classList.add('is-open');
+
+  // The full plan button deep-links to the IDP page with this person.
+  document.getElementById('orgcPanelOpen').onclick = function () {
+    idpPersonId = id;
+    closeOrgPanel();
+    navigate('idp');
+  };
+
+  setTimeout(function () {
+    body.innerHTML = orgRenderPlan(p);
+  }, 380);
+}
+
+function closeOrgPanel() {
+  orgcPanel.classList.remove('is-open');
+  orgcScrim.classList.remove('is-open');
+  document.querySelectorAll('[data-org-person][aria-pressed]').forEach(function (n) {
+    n.setAttribute('aria-pressed', 'false');
+  });
+  if (orgcLastFocus && orgcLastFocus.focus) orgcLastFocus.focus();
+}
+document.getElementById('orgcPanelClose').addEventListener('click', closeOrgPanel);
+orgcScrim.addEventListener('click', closeOrgPanel);
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape' && orgcPanel.classList.contains('is-open')) closeOrgPanel();
+});
+
+// Person summary inside the drawer: employee record + required level by
+// axis + an honest assessment state (scores live in the cloud matrix).
+function orgRenderPlan(p) {
+  var tgt = getTarget(p);
+  var out = '';
+
+  out += '<dl class="orgc-kv">'
+    + '<dt>' + t('Mã nhân viên', 'Employee ID') + '</dt><dd>' + orgEscape(p.id) + '</dd>'
+    + '<dt>' + t('Chức vụ', 'Position') + '</dt><dd>' + orgEscape(p.pos) + '</dd>'
+    + '<dt>' + t('Nhóm', 'Team') + '</dt><dd>' + orgEscape(p.team) + '</dd>'
+    + '<dt>' + t('Năng lực', 'Competencies') + '</dt><dd>' + SKILLS.length + '</dd>'
+    + '</dl>';
+
+  out += '<div class="orgc-blk"><h4>' + t('Mức yêu cầu theo trụ', 'Required level by axis') + '</h4>';
+  if (!tgt || !tgt.length) {
+    out += '<div class="orgc-empty"><b>' + t('Không có mức định sẵn', 'No target profile') + '</b>'
+      + '<p>' + t('Thêm một dòng ' + p.team + ' | ' + p.pos + ' vào TARGET.', 'Add a ' + p.team + ' | ' + p.pos + ' row to TARGET.') + '</p></div>';
+  } else {
+    [['A', t('Kỹ thuật', 'Technical')], ['B', t('Ứng dụng', 'Application')], ['C', t('Hành vi', 'Behavioral')]]
+      .forEach(function (ax) {
+        var idx = SKILLS.map(function (s, i) { return s.ax === ax[0] ? i : -1; })
+          .filter(function (i) { return i >= 0; });
+        out += '<div class="orgc-axis-row"><span>' + ax[1] + '</span><span class="orgc-dots">'
+          + idx.map(function (i) { return '<i class="orgc-dot" data-l="' + tgt[i] + '"></i>'; }).join('')
+          + '</span><em>' + idx.length + '</em></div>';
+      });
+  }
+  out += '</div>';
+
+  out += '<div class="orgc-blk"><h4>' + t('Đánh giá hiện tại', 'Current assessment') + '</h4>'
+    + '<div class="orgc-empty"><b>' + t('Chưa có điểm', 'No score entered yet') + '</b>'
+    + '<p>' + t('Điểm đánh giá nằm trong ma trận năng lực trên đám mây. Mở kế hoạch đầy đủ để xem.', 'Assessment scores live in the cloud matrix. Open the full plan to review them.') + '</p></div></div>';
+
+  return out;
 }
 
 // People in the CSV whose team isn't one of the LEAN_* teams.
@@ -2765,11 +2930,12 @@ document.querySelectorAll('.nav-item').forEach(function(item) {
   item.addEventListener('click', function() { navigate(this.dataset.page); });
 });
 
-// Org-chart nodes → IDP. Delegated, so it survives every re-render.
+// Org-chart nodes → open the person drawer (right panel, "panel is-open").
+// Delegated, so it survives every re-render.
 document.addEventListener('click', function (e) {
   var n = e.target.closest('[data-org-person]');
   if (!n || n.disabled) return;
-  openPersonPlan(n.getAttribute('data-org-person'));
+  openOrgPanel(n.getAttribute('data-org-person'));
 });
 
 setLang(lang);

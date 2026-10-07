@@ -98,7 +98,9 @@ what makes Huy owning both TPM and TECHNOLOGY legible at a glance.
   Disabled = the GM, who has no record in `employees` and so has no plan
 - Depth is `data-depth` on the spine item — no inline custom properties
 - Tier colour is applied purely by `data-org-tier` + `--tier-*`
-- Clicking a node preselects that person on the IDP page (`idpPersonId`)
+- Clicking a node opens a right-hand drawer (`orgcPanel` + `.is-open`) with the
+  person's summary; the drawer's primary button opens the full IDP page with
+  that person preselected (`idpPersonId`)
 - The previous inline-style tree is archived at `org-chart-legacy-backup.html`;
   `git HEAD` before the redesign also has it
 
