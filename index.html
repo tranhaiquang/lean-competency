@@ -19,6 +19,8 @@ if (typeof window.loadMatrixFromCloud === 'function') window.loadMatrixFromCloud
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
+/* Hallmark · genre: modern-minimal · macrostructure: Workbench ·
+   theme: design.md (SA1 locked tokens) · nav: N9-edge-aligned · footer: none */
 /* ═══════════════════════════════════════════
    DESIGN SYSTEM — Hallmark (hex tokens)
    ═══════════════════════════════════════════ */
@@ -67,6 +69,12 @@ if (typeof window.loadMatrixFromCloud === 'function') window.loadMatrixFromCloud
   --tier-smgr: #1D4ED8;
   --tier-lead: #15803D;
   --tier-staff: #2F4B9E;
+
+  /* Overlays + depth scale (were raw rgba literals) */
+  --scrim: rgba(23, 32, 43, 0.28);
+  --shadow-panel: -8px 0 32px rgba(31, 53, 115, 0.12);
+  --z-scrim: 49;
+  --z-drawer: 50;
 
   /* Shape — SA1 uses 20px cards / 7-10px controls */
   --radius-card: 20px;
@@ -242,7 +250,7 @@ td.met-col { text-align: right; font-size: 11.5px; color: var(--ink-muted); back
   display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
   padding: 8px; background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-ctl); cursor: pointer; font-family: var(--font);
-  transition: border-color 220ms var(--ease-out), background 220ms var(--ease-out), transform 220ms var(--ease-out);
+  transition: border-color var(--dur-short) var(--ease-out), background var(--dur-short) var(--ease-out), transform var(--dur-short) var(--ease-out);
 }
 .orgc-node:hover { border-color: var(--rule-strong); transform: translateX(2px); }
 .orgc-node:active { transform: translateX(0); }
@@ -269,7 +277,7 @@ td.met-col { text-align: right; font-size: 11.5px; color: var(--ink-muted); back
 
 /* Team lanes */
 .orgc-lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(196px, 1fr)); gap: 12px; }
-.orgc-lane { display: flex; flex-direction: column; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-ctl); overflow: hidden; }
+.orgc-lane { display: flex; flex-direction: column; background: var(--bg); border-radius: var(--radius-ctl); overflow: hidden; }
 .orgc-lane-head { padding: 12px; border-bottom: 1px solid var(--border); background: var(--header); }
 .orgc-lane-head .orgc-lt { display: flex; align-items: baseline; gap: 8px; }
 .orgc-lane-head .orgc-lt b { font-family: var(--mono); font-size: 12px; font-weight: 500; }
@@ -298,13 +306,13 @@ td.met-col { text-align: right; font-size: 11.5px; color: var(--ink-muted); back
 }
 
 /* ORG person panel — right drawer, mirrors org-chart-c-lanes.html */
-.orgc-scrim { position: fixed; inset: 0; background: rgba(23,32,43,.28); z-index: 39;
-  opacity: 0; visibility: hidden; transition: opacity 220ms var(--ease-out), visibility 220ms var(--ease-out); }
+.orgc-scrim { position: fixed; inset: 0; background: var(--scrim); z-index: var(--z-scrim);
+  opacity: 0; visibility: hidden; transition: opacity var(--dur-short) var(--ease-out), visibility var(--dur-short) var(--ease-out); }
 .orgc-scrim.is-open { opacity: 1; visibility: visible; }
-.orgc-panel { position: fixed; inset: 0 0 0 auto; width: min(440px,100%); z-index: 40;
+.orgc-panel { position: fixed; inset: 0 0 0 auto; width: min(440px,100%); z-index: var(--z-drawer);
   background: var(--surface); border-left: 1px solid var(--border);
-  box-shadow: -8px 0 32px rgba(31,53,115,.12); display: flex; flex-direction: column;
-  transform: translateX(100%); transition: transform 220ms var(--ease-out); visibility: hidden; }
+  box-shadow: var(--shadow-panel); display: flex; flex-direction: column;
+  transform: translateX(100%); transition: transform var(--dur-short) var(--ease-out); visibility: hidden; }
 .orgc-panel.is-open { transform: translateX(0); visibility: visible; }
 .orgc-panel-head { display: flex; align-items: flex-start; gap: 12px; padding: 24px 24px 16px; border-bottom: 1px solid var(--border); }
 .orgc-panel-head .orgc-nm { flex: 1 1 auto; }
@@ -479,7 +487,7 @@ td.met-col { text-align: right; font-size: 11.5px; color: var(--ink-muted); back
   border-color: var(--primary-light);
 }
 .course-table input[type="text"]:focus, .course-table input[type="number"]:focus, .course-table select:focus {
-  border-color: var(--primary); background: #fff; outline: none; box-shadow: 0 0 0 2px rgba(91,141,239,0.1);
+  border-color: var(--primary); background: #fff; outline: none; box-shadow: 0 0 0 2px var(--brand-tint);
 }
 .course-table input[type="number"] { text-align: right; }
 .course-table input.code-input { font-family: var(--mono); font-size: 11.5px; background: var(--surface); }
@@ -1569,7 +1577,7 @@ function renderOverview(el) {
   html += '<p class="page-desc">' + t('Mỗi thanh hiển thị khoảng cách trung bình giữa mức hiện tại và mức yêu cầu trên 19 người. Thanh kéo dài về phía bên trái càng nhiều thì kỹ năng đó càng cần được ưu tiên đào tạo.', 'Each bar shows the average gap between current level and required level across 19 people. The longer a bar extends left, the higher that competency should be prioritized for training.') + '</p>';
   gaps.forEach(function(g) {
     var pct = (g.gap / maxAbs) * 50;
-    var color = g.gap < -0.5 ? '#B5493A' : g.gap < 0 ? '#E8B79A' : '#2F7355';
+    var color = g.gap < -0.5 ? 'var(--negative)' : g.gap < 0 ? 'var(--evidence-flag)' : 'var(--positive)';
     var left, width;
     if (g.gap < 0) {
       left = (50 + pct) + '%';
