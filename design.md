@@ -78,6 +78,9 @@ modern-minimal
 - Axis Application: `#F5A66E` (orange)
 - Axis Behavioral: `#1F6459` (teal)
 - Positive: `#2F7355` · Negative: `#B5493A`
+- `--tech-accent: #7C3AED` (violet) — TECH lane/leader accent.
+  IE=blue, CI=teal, TPM=orange, TECH=violet, Admin=grey, so the four teams
+  read distinctly.
 - Evidence flag: `#F5A66E`
 - Org-chart tiers: GM `#0E8074`, S.Manager `#1D4ED8`,
   Team leader `#15803D`, Staff `#2F4B9E` — exposed as `--tier-*` tokens, never
@@ -131,7 +134,8 @@ tokens when touched; do not add new ones.
   --evidence-flag: #F5A66E;
   --axis-lean: #2F4B9E;  --axis-soft: #1F6459;  --axis-language: #F5A66E;
   --positive: #2F7355;  --negative: #B5493A;
-
+  --tech-accent: #7C3AED;   /* TECH lane/accent — violet; blue/teal/orange/green are taken by IE/CI/TPM/Admin */
+  
   /* Org-chart tiers */
   --tier-gm: #0E8074;  --tier-smgr: #1D4ED8;
   --tier-lead: #15803D;  --tier-staff: #2F4B9E;
