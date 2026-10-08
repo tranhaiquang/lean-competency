@@ -105,6 +105,19 @@ body{
 .node[data-tier="lead"] .chip{background:color-mix(in oklab,var(--tier-lead) 12%,var(--surface));color:var(--tier-lead)}
 .node[data-tier="staff"] .chip{background:var(--level-0);color:var(--ink-muted)}
 
+/* Accent highlight on GM, S.Manager and Team leader cards */
+.node[data-accent="LEAN IE"]{--node-accent:var(--primary)}
+.node[data-accent="LEAN CI"]{--node-accent:var(--axis-soft)}
+.node[data-accent="LEAN TPM"]{--node-accent:var(--axis-language)}
+.node[data-accent="LEAN TECHNOLOGY"]{--node-accent:var(--primary-light)}
+.node[data-accent="Other"]{--node-accent:var(--ink-muted)}
+.node[data-accent="smgr"]{--node-accent:var(--tier-smgr)}
+.node[data-accent="gm"]{--node-accent:var(--tier-gm)}
+.node[data-accent]{background:color-mix(in oklab,var(--node-accent,var(--primary)) 10%,var(--surface));
+  border-color:color-mix(in oklab,var(--node-accent,var(--primary)) 30%,var(--border))}
+.node[data-accent] .chip{background:color-mix(in oklab,var(--node-accent,var(--primary)) 14%,var(--surface));
+  color:var(--node-accent,var(--primary))}
+
 /* ── Lanes ────────────────────────────────────────────────────── */
 .lanes{display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:var(--sp-3)}
 .lane{position:relative;display:flex;flex-direction:column;overflow:hidden;
@@ -355,6 +368,11 @@ function makeNode(id, opts) {
   btn.type = 'button';
   btn.setAttribute('data-tier', tier);
   btn.setAttribute('data-person', id);
+  var accent = '';
+  if (tier === 'gm') accent = 'gm';
+  else if (tier === 'smgr') accent = 'smgr';
+  else if (tier === 'lead') accent = opts.team || (p && p.team) || '';
+  if (accent) btn.setAttribute('data-accent', accent);
   if (opts.override) { btn.disabled = true; btn.title = 'Not in the employee table — no individual plan'; }
 
   var av = el('span', 'av');
@@ -422,7 +440,7 @@ function renderLanes() {
 
     var lid = leaderOf(team);
     if (lid) {
-      var ln = makeNode(lid);
+      var ln = makeNode(lid, { team: team });
       if (ln) { ln.classList.add('lead'); head.appendChild(ln); }
     } else {
       head.appendChild(el('span', 'lane-empty', 'No group leader'));

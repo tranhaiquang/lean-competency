@@ -275,6 +275,26 @@ td.met-col { text-align: right; font-size: 11.5px; color: var(--ink-muted); back
 .orgc-node[data-tier="lead"] .orgc-chip { background: color-mix(in oklab, var(--tier-lead) 12%, var(--surface)); color: var(--tier-lead); }
 .orgc-node[data-tier="staff"] .orgc-chip { background: var(--level-0); color: var(--ink-muted); }
 
+/* Accent highlight on GM, S.Manager and Team leader cards.
+   --node-accent comes from data-accent (team colour for leaders, tier colour
+   for GM / S.Manager). */
+.orgc-node[data-accent="LEAN IE"]         { --node-accent: var(--primary); }
+.orgc-node[data-accent="LEAN CI"]         { --node-accent: var(--axis-soft); }
+.orgc-node[data-accent="LEAN TPM"]        { --node-accent: var(--axis-language); }
+.orgc-node[data-accent="LEAN TECHNOLOGY"] { --node-accent: var(--primary-light); }
+.orgc-node[data-accent="Other"]           { --node-accent: var(--ink-muted); }
+.orgc-node[data-accent="smgr"]            { --node-accent: var(--tier-smgr); }
+.orgc-node[data-accent="gm"]              { --node-accent: var(--tier-gm); }
+
+.orgc-node[data-accent] {
+  background: color-mix(in oklab, var(--node-accent, var(--primary)) 10%, var(--surface));
+  border-color: color-mix(in oklab, var(--node-accent, var(--primary)) 30%, var(--border));
+}
+.orgc-node[data-accent] .orgc-chip {
+  background: color-mix(in oklab, var(--node-accent, var(--primary)) 14%, var(--surface));
+  color: var(--node-accent, var(--primary));
+}
+
 /* Team lanes */
 .orgc-lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(196px, 1fr)); gap: 12px; }
 .orgc-lane { position: relative; display: flex; flex-direction: column; overflow: hidden;
@@ -803,6 +823,12 @@ function orgNodeHtml(id, opts) {
     return '';
   }
 
+  var accent = '';
+  if (tier === 'gm') accent = 'gm';
+  else if (tier === 'smgr') accent = 'smgr';
+  else if (tier === 'lead') accent = opts.team || (p && p.team) || '';
+  // Staff stay neutral — no accent highlight by default.
+
   var title = '';
   if (opts.override) {
     title = ' title="' + orgEscape(t(
@@ -814,6 +840,7 @@ function orgNodeHtml(id, opts) {
   return '<button type="button" class="orgc-node' + (opts.cls ? ' ' + opts.cls : '') + '"'
     + ' data-org-person="' + orgEscape(id) + '"'
     + ' data-org-tier="' + tier + '"'
+    + (accent ? ' data-accent="' + orgEscape(accent) + '"' : '')
     + (opts.override ? ' disabled' : '') + title + '>'
     + '<span class="orgc-av" data-ini="' + orgEscape((name.charAt(0) || '?').toUpperCase()) + '">'
     + (img ? '<img src="' + img + '" alt="" loading="lazy">' : '')
@@ -869,7 +896,7 @@ function orgLanesHtml() {
       + '<div class="orgc-lt"><b>' + orgEscape(orgTeamLabel(team)) + '</b>'
       + '<span>' + members.length + ' ' + t('người', 'people') + '</span></div>';
 
-    var leaderNode = lid ? orgNodeHtml(lid, { cls: 'orgc-lane-lead' }) : '';
+    var leaderNode = lid ? orgNodeHtml(lid, { cls: 'orgc-lane-lead', team: team }) : '';
     out += leaderNode || '<span class="orgc-lane-none">'
       + t('Không có trưởng nhóm', 'No group leader') + '</span>';
 
