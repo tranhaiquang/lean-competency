@@ -277,10 +277,19 @@ td.met-col { text-align: right; font-size: 11.5px; color: var(--ink-muted); back
 
 /* Team lanes */
 .orgc-lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(196px, 1fr)); gap: 12px; }
-.orgc-lane { display: flex; flex-direction: column; background: var(--bg); border-radius: var(--radius-ctl); overflow: hidden; }
-.orgc-lane-head { padding: 12px; border-bottom: 1px solid var(--border); background: var(--header); }
+.orgc-lane { position: relative; display: flex; flex-direction: column; overflow: hidden;
+  background: color-mix(in oklab, var(--lane-accent, var(--primary)) 5%, var(--bg));
+  border-radius: var(--radius-ctl); padding-top: 4px; }
+.orgc-lane::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: var(--lane-accent, var(--primary)); }
+.orgc-lane[data-team="LEAN IE"]         { --lane-accent: var(--primary); }
+.orgc-lane[data-team="LEAN CI"]         { --lane-accent: var(--axis-soft); }
+.orgc-lane[data-team="LEAN TPM"]        { --lane-accent: var(--axis-language); }
+.orgc-lane[data-team="LEAN TECHNOLOGY"] { --lane-accent: var(--primary-light); }
+.orgc-lane[data-team="Other"]           { --lane-accent: var(--ink-muted); }
+.orgc-lane-head { padding: 12px; border-bottom: 1px solid var(--border); background: color-mix(in oklab, var(--lane-accent, var(--primary)) 8%, var(--header)); }
 .orgc-lane-head .orgc-lt { display: flex; align-items: baseline; gap: 8px; }
-.orgc-lane-head .orgc-lt b { font-family: var(--mono); font-size: 12px; font-weight: 500; }
+.orgc-lane-head .orgc-lt b { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--lane-accent, var(--ink)); }
 .orgc-lane-head .orgc-lt span { font-family: var(--mono); font-size: 10.5px; color: var(--ink-dim); margin-left: auto; }
 .orgc-lane-lead { margin: 6px auto 0; display: flex; width: 100%; justify-content: center; }
 .orgc-lane-lead .orgc-chip { margin-left: 0; }
@@ -856,7 +865,7 @@ function orgLanesHtml() {
     if (!members.length && !lid) return;
     lanes++;
 
-    out += '<div class="orgc-lane"><div class="orgc-lane-head">'
+    out += '<div class="orgc-lane" data-team="' + orgEscape(team) + '"><div class="orgc-lane-head">'
       + '<div class="orgc-lt"><b>' + orgEscape(orgTeamLabel(team)) + '</b>'
       + '<span>' + members.length + ' ' + t('người', 'people') + '</span></div>';
 

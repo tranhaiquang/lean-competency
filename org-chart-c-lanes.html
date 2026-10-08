@@ -107,11 +107,19 @@ body{
 
 /* ── Lanes ────────────────────────────────────────────────────── */
 .lanes{display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:var(--sp-3)}
-.lane{display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--border);
-  border-radius:var(--radius-ctl);overflow:hidden}
-.lane-head{padding:var(--sp-3);border-bottom:1px solid var(--border);background:var(--header)}
+.lane{position:relative;display:flex;flex-direction:column;overflow:hidden;
+  background:color-mix(in oklab,var(--lane-accent,var(--primary)) 5%,var(--bg));
+  border-radius:var(--radius-ctl);padding-top:4px}
+.lane::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--lane-accent,var(--primary))}
+.lane[data-team="LEAN CI"]{--lane-accent:var(--axis-soft)}
+.lane[data-team="LEAN IE"]{--lane-accent:var(--primary)}
+.lane[data-team="Other"]{--lane-accent:var(--ink-muted)}
+.lane[data-team="LEAN TPM"]{--lane-accent:var(--axis-language)}
+.lane[data-team="LEAN TECHNOLOGY"]{--lane-accent:var(--primary-light)}
+.lane-head{padding:var(--sp-3);border-bottom:1px solid var(--border);
+  background:color-mix(in oklab,var(--lane-accent,var(--primary)) 8%,var(--header))}
 .lane-head .t{display:flex;align-items:baseline;gap:var(--sp-2)}
-.lane-head .t b{font-family:var(--mono);font-size:12px;font-weight:500}
+.lane-head .t b{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--lane-accent,var(--ink))}
 .lane-head .t span{font-family:var(--mono);font-size:10.5px;color:var(--ink-dim);margin-left:auto}
 .lane-head .lead{margin:6px auto 0;display:flex;width:100%;justify-content:center}
 .lane-head .lead .chip{margin-left:0}
@@ -399,9 +407,13 @@ function renderLanes() {
 
   TEAM_ORDER.forEach(function (team) {
     var members = PEOPLE.filter(function (p) { return p.team === team && !placed[p.id]; });
-    if (!members.length) return;
+    var lid = leaderOf(team);
+    // Render a lane when it has unplaced staff OR a (placed) leader node —
+    // otherwise an all-placed team like Admin would never show.
+    if (!members.length && !lid) return;
 
     var lane = el('div', 'lane');
+    lane.setAttribute('data-team', team);
     var head = el('div', 'lane-head');
     var t = el('div', 't');
     t.appendChild(el('b', null, teamLabel(team)));
