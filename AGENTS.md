@@ -41,6 +41,12 @@ the left; team membership runs across swimlanes on the right. Toggled with
 `SHOW_ORG_CHART`.
 
 - **Data**: `ORG_CHART` (`root` / `reports` / `teamsUnder` / `above`), `ORG_TEAM_LABEL`
+- **Roster**: `BASE_PEOPLE` is the pristine seed. Edits live in a delta —
+  `rosterAdded` / `rosterChanged` / `rosterDeleted` — and `applyRosterDelta()`
+  rebuilds `PEOPLE` from `seed + changed + added − deleted`. Everything that
+  reads `PEOPLE` (matrix, org chart, IDP, filters) picks edits up for free.
+  Managed from the Competency Matrix page via `openRosterManager()`; persisted
+  in `localStorage` and pushed to the Supabase `employees` table.
 - **Render**: `renderOrgChart()` → `orgSpineHtml()` + `orgLanesHtml()` → `orgNodeHtml()`
 - **Helpers**: `orgPlacedIds()` (IDs already drawn as nodes, so nobody is
   listed twice), `orgLeaderOf(team)` (inverts `teamsUnder`; Huy leads both TPM

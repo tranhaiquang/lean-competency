@@ -1063,6 +1063,68 @@ var PEOPLE = [
   { id: "26070601", name: "Hoàng Minh Chiến",       team: "LEAN TECHNOLOGY", pos: "Staff",     s: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] }
 ];
 
+// ═══ ROSTER EDITS ═══════════════════════════════════════════
+// The PEOPLE array above is the pristine seed (employee_list.csv,
+// also imported into the Supabase `employees` table). Add / delete /
+// team+position changes are stored as a *delta* rather than by
+// rewriting PEOPLE, so:
+//   - the seed stays intact and remains the merge base
+//   - reset restores the original roster in one click
+//   - edits round-trip to Supabase and back
+//
+// rosterChanged: { personId: { team?, pos? } }
+// rosterAdded:   { personId: { id, name, team, pos } }
+// rosterDeleted: { personId: true }
+var rosterChanged = {};
+var rosterAdded = {};
+var rosterDeleted = {};
+
+// Copy of the seed. Object identity must not be shared with PEOPLE,
+// or editing a person would corrupt the merge base.
+var BASE_PEOPLE = PEOPLE.map(function (p) {
+  return { id: p.id, name: p.name, team: p.team, pos: p.pos, s: p.s.slice() };
+});
+
+// Effective roster = seed + changed + added − deleted. Every existing
+// consumer (matrix, org chart, IDP, filters) reads PEOPLE, so applying
+// the delta here propagates it everywhere.
+function applyRosterDelta() {
+  PEOPLE = BASE_PEOPLE.map(function (p) {
+    return { id: p.id, name: p.name, team: p.team, pos: p.pos, s: p.s.slice() };
+  });
+
+  Object.keys(rosterChanged).forEach(function (id) {
+    var p = PEOPLE.find(function (x) { return x.id === id; });
+    if (!p) return;
+    var c = rosterChanged[id];
+    if (c.team) p.team = c.team;
+    if (c.pos) p.pos = c.pos;
+  });
+
+  Object.keys(rosterAdded).forEach(function (id) {
+    var a = rosterAdded[id];
+    var blank = [];
+    for (var i = 0; i < SKILLS.length; i++) blank.push(null);
+    PEOPLE.push({ id: a.id, name: a.name, team: a.team, pos: a.pos, s: blank });
+  });
+
+  Object.keys(rosterDeleted).forEach(function (id) {
+    PEOPLE = PEOPLE.filter(function (p) { return p.id !== id; });
+  });
+}
+
+// A removed person's assessment data goes with them, otherwise it lingers
+// in localStorage and re-appears if the same id is ever added back.
+function purgePersonData(id) {
+  Object.keys(matrixScores).forEach(function (k) {
+    if (k === id || k.indexOf(id + '_') === 0) delete matrixScores[k];
+  });
+  Object.keys(matrixEvidence).forEach(function (k) { if (k === id) delete matrixEvidence[k]; });
+  Object.keys(matrixConfirmed).forEach(function (k) {
+    if (k === id || k.indexOf(id + '_') === 0) delete matrixConfirmed[k];
+  });
+}
+
 // Required level per team × position. Team names remapped from the
 // old IE / TECH/PE / CI to the CSV's LEAN_* names; the level arrays
 // are carried over from the corresponding original row.
@@ -1335,7 +1397,11 @@ function loadState() {
     if (d.courseRan) courseRan = d.courseRan;
     if (d.coursePass) coursePass = d.coursePass;
     if (d.courseDecision) courseDecision = d.courseDecision;
+    if (d.rosterAdded) rosterAdded = d.rosterAdded;
+    if (d.rosterChanged) rosterChanged = d.rosterChanged;
+    if (d.rosterDeleted) rosterDeleted = d.rosterDeleted;
   } catch(e) {}
+  applyRosterDelta();
 }
 
 function saveState() {
@@ -1343,7 +1409,8 @@ function saveState() {
     scores: matrixScores, evidence: matrixEvidence, confirmed: matrixConfirmed,
     examScores: examScores, calendarStatus: calendarStatus, proposals: proposals,
     lang: lang, strictEvidence: strictEvidence, calMonth: calMonth,
-    courseYear: courseYear, courseRan: courseRan, coursePass: coursePass, courseDecision: courseDecision
+    courseYear: courseYear, courseRan: courseRan, coursePass: coursePass, courseDecision: courseDecision,
+    rosterAdded: rosterAdded, rosterChanged: rosterChanged, rosterDeleted: rosterDeleted
   }));
 }
 
@@ -1351,6 +1418,8 @@ function resetState() {
   matrixScores = {}; matrixEvidence = {}; matrixConfirmed = {};
   examScores = {}; calendarStatus = {}; proposals = [];
   courseRan = {}; coursePass = {}; courseDecision = {};
+  rosterAdded = {}; rosterChanged = {}; rosterDeleted = {};
+  applyRosterDelta();
   localStorage.removeItem('lean_competency_v20');
 }
 
@@ -1780,6 +1849,265 @@ function renderOverview(el) {
 // MATRIX
 // ═══════════════════════════════════════════
 
+// ═══════════════════════════════════════════
+// ROSTER MANAGER — add / delete / change team + position
+// ═══════════════════════════════════════════
+
+function rosterTeamOptions(selected) {
+  return TEAMS.concat([TEAM_UNASSIGNED]).map(function (tm) {
+    return '<option value="' + orgEscape(tm) + '"' + (tm === selected ? ' selected' : '') + '>'
+      + orgEscape(tm === TEAM_UNASSIGNED ? t('ADMIN', 'Admin') : tm) + '</option>';
+  }).join('');
+}
+
+function rosterPosOptions(selected) {
+  return TIER_ORDER.map(function (p) {
+    return '<option value="' + orgEscape(p) + '"' + (p === selected ? ' selected' : '') + '>'
+      + orgEscape(p) + '</option>';
+  }).join('');
+}
+
+// Next free employee id — employees.employee_id is the primary key, so a
+// collision would be a hard failure on insert.
+function rosterNextId() {
+  var max = 0;
+  PEOPLE.concat(BASE_PEOPLE).forEach(function (p) {
+    var n = parseInt(p.id, 10);
+    if (!isNaN(n) && n > max) max = n;
+  });
+  return String(max + 1);
+}
+
+function rosterCommit(msg) {
+  applyRosterDelta();
+  saveState();
+  syncRosterToCloud();
+  renderPage();
+  if (msg) toast(msg, false);
+}
+
+function rosterSetTeam(id, team) {
+  if (team === TEAM_UNASSIGNED) team = TEAM_UNASSIGNED;
+  rosterChanged[id] = rosterChanged[id] || {};
+  rosterChanged[id].team = team;
+  delete rosterDeleted[id];
+  rosterCommit(t('Đã đổi nhóm', 'Team updated'));
+}
+
+function rosterSetPos(id, pos) {
+  rosterChanged[id] = rosterChanged[id] || {};
+  rosterChanged[id].pos = pos;
+  rosterCommit(t('Đã đổi chức vụ', 'Position updated'));
+}
+
+function rosterAddPerson(name, team, pos, id) {
+  id = (id || rosterNextId()).trim();
+  if (PEOPLE.some(function (p) { return p.id === id; })) {
+    toast(t('Mã nhân viên đã tồn tại', 'Employee ID already exists'), true);
+    return false;
+  }
+  rosterAdded[id] = { id: id, name: name, team: team, pos: pos };
+  delete rosterDeleted[id];
+  rosterCommit(t('Đã thêm ' + name, 'Added ' + name));
+  return true;
+}
+
+function rosterDeletePerson(id) {
+  var p = PEOPLE.find(function (x) { return x.id === id; });
+  if (!p) return;
+  if (!confirm(t('Xóa ' + p.name + ' khỏi danh sách? Điểm đánh giá của họ cũng sẽ bị xóa.',
+                'Remove ' + p.name + ' from the roster? Their assessment scores will be deleted too.'))) return;
+
+  if (BASE_PEOPLE.some(function (x) { return x.id === id; })) rosterDeleted[id] = true;
+  delete rosterAdded[id];
+  delete rosterChanged[id];
+  purgePersonData(id);
+  rosterCommit(t('Đã xóa ' + p.name, 'Removed ' + p.name));
+}
+
+// ── Supabase sync ───────────────────────────────────────────
+// employees is the shared roster. Writes need the roster write policy in
+// supabase/migrations/0004_employees_roster_write.sql; without it the
+// local edit still applies but the push is rejected.
+var rosterSyncWarned = false;
+
+function syncRosterToCloud() {
+  if (!sb) return;
+  var baseIds = {};
+  BASE_PEOPLE.forEach(function (p) { baseIds[p.id] = true; });
+
+  Object.keys(rosterAdded).forEach(function (id) {
+    var a = rosterAdded[id];
+    sb.from('employees').upsert({
+      employee_id: parseInt(id, 10) || id,
+      full_name: a.name, seniority: a.pos, team: a.team
+    }, { onConflict: 'employee_id' }).then(function (res) { rosterSyncErr(res); });
+  });
+
+  Object.keys(rosterChanged).forEach(function (id) {
+    if (!baseIds[id]) return;
+    var c = rosterChanged[id];
+    var patch = {};
+    if (c.team) patch.team = c.team;
+    if (c.pos) patch.seniority = c.pos;
+    if (!Object.keys(patch).length) return;
+    sb.from('employees').update(patch).eq('employee_id', parseInt(id, 10) || id)
+      .then(function (res) { rosterSyncErr(res); });
+  });
+
+  Object.keys(rosterDeleted).forEach(function (id) {
+    sb.from('employees').delete().eq('employee_id', parseInt(id, 10) || id)
+      .then(function (res) { rosterSyncErr(res); });
+  });
+}
+
+function rosterSyncErr(res) {
+  if (!res || !res.error) return;
+  if (rosterSyncWarned) return;   // one warning per session, not one per row
+  rosterSyncWarned = true;
+  console.warn('Roster sync failed:', res.error.message);
+  toast(t('Đã lưu cục bộ, nhưng không đồng bộ được lên máy chủ (thiếu quyền ghi bảng employees).',
+          'Saved locally, but could not sync to the server (employees write policy missing).'), true);
+}
+
+// Pull the shared roster and fold it into the local delta so other
+// users' edits show up here too. Offline → localStorage delta stands.
+function loadRosterFromCloud() {
+  if (!sb) return;
+  sb.from('employees').select('employee_id,full_name,seniority,team').then(function (res) {
+    if (res.error || !res.data) return;
+    var cloud = {};
+    res.data.forEach(function (r) { cloud[String(r.employee_id)] = r; });
+
+    var baseIds = {};
+    BASE_PEOPLE.forEach(function (p) {
+      baseIds[p.id] = true;
+      var c = cloud[p.id];
+      if (!c) { rosterDeleted[p.id] = true; return; }   // removed upstream
+      delete rosterDeleted[p.id];
+      var team = c.team || TEAM_UNASSIGNED;
+      var teamName = (team === 'ADMIN' || !team) ? TEAM_UNASSIGNED : team;
+      if (teamName !== p.team || c.seniority !== p.pos) {
+        rosterChanged[p.id] = { team: teamName, pos: c.seniority };
+      } else {
+        delete rosterChanged[p.id];
+      }
+    });
+
+    // Anyone in the cloud but not in the seed is an upstream addition.
+    Object.keys(cloud).forEach(function (id) {
+      if (baseIds[id] || rosterAdded[id]) return;
+      var r = cloud[id];
+      var team = r.team || TEAM_UNASSIGNED;
+      rosterAdded[id] = {
+        id: id, name: r.full_name,
+        team: (team === 'ADMIN') ? TEAM_UNASSIGNED : team,
+        pos: r.seniority || 'Staff'
+      };
+    });
+
+    applyRosterDelta();
+    saveState();
+    renderPage();
+  });
+}
+
+// ── Manager UI ──────────────────────────────────────────────
+function openRosterManager() {
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'rosterOverlay';
+  overlay.onclick = function (e) { if (e.target === overlay) closeRosterManager(); };
+
+  function rowHtml(p) {
+    return '<tr data-id="' + orgEscape(p.id) + '">'
+      + '<td style="padding:6px 8px;font-size:12.5px;font-weight:500;">' + orgEscape(p.name) + '</td>'
+      + '<td style="padding:4px 6px;"><select data-roster="team" style="width:100%;font-size:12px;">'
+      + rosterTeamOptions(p.team) + '</select></td>'
+      + '<td style="padding:4px 6px;"><select data-roster="pos" style="width:100%;font-size:12px;">'
+      + rosterPosOptions(p.pos) + '</select></td>'
+      + '<td style="padding:4px 6px;"><button class="del-btn" data-roster-del="' + orgEscape(p.id) + '" '
+      + 'title="' + orgEscape(t('Xóa khỏi danh sách', 'Remove from roster')) + '" '
+      + 'style="border-color:var(--negative);color:var(--negative);">'
+      + t('Xóa', 'Delete') + '</button></td>'
+      + '</tr>';
+  }
+
+  var rows = PEOPLE.slice().sort(function (a, b) {
+    return a.team === b.team ? a.name.localeCompare(b.name) : a.team.localeCompare(b.team);
+  }).map(rowHtml).join('');
+
+  var panel = document.createElement('div');
+  panel.className = 'editor-panel';
+  panel.style.maxWidth = '620px';
+  panel.innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">'
+    + '<div><h3>' + t('Quản lý danh sách nhân sự', 'Manage roster') + '</h3>'
+    + '<div class="editor-meta">' + t('Thêm, xóa, đổi nhóm hoặc chức vụ. Đồng bộ với bảng employees trên máy chủ.',
+                                       'Add, remove, change team or position. Synced to the server employees table.') + '</div></div>'
+    + '<button class="modal-close" onclick="closeRosterManager()">&times;</button></div>'
+    + '<div style="max-height:46vh;overflow-y:auto;border:1px solid var(--border);border-radius:6px;">'
+    + '<table style="width:100%;border-collapse:collapse;">'
+    + '<thead><tr style="background:var(--header);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);">'
+    + '<th style="text-align:left;padding:6px 8px;">' + t('Họ tên', 'Name') + '</th>'
+    + '<th style="text-align:left;padding:6px 8px;">' + t('Nhóm', 'Team') + '</th>'
+    + '<th style="text-align:left;padding:6px 8px;">' + t('Chức vụ', 'Position') + '</th>'
+    + '<th></th></tr></thead>'
+    + '<tbody>' + rows + '</tbody></table></div>'
+    // Add form
+    + '<div style="margin-top:14px;padding:12px;border:1px dashed var(--rule-strong);border-radius:6px;">'
+    + '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);margin-bottom:8px;">'
+    + t('Thêm nhân viên', 'Add person') + '</div>'
+    + '<div style="display:grid;grid-template-columns:2fr 1.4fr 1.2fr auto;gap:8px;align-items:center;">'
+    + '<input id="rosterNewName" placeholder="' + t('Họ và tên', 'Full name') + '" style="font-size:12px;padding:6px 8px;">'
+    + '<select id="rosterNewTeam" style="font-size:12px;padding:6px 8px;">' + rosterTeamOptions(TEAMS[0]) + '</select>'
+    + '<select id="rosterNewPos" style="font-size:12px;padding:6px 8px;">' + rosterPosOptions('Staff') + '</select>'
+    + '<button class="btn-primary" id="rosterAddBtn" style="padding:7px 14px;font-size:12px;">'
+    + t('Thêm', 'Add') + '</button>'
+    + '</div></div>'
+    + '<div class="editor-actions"><button class="btn-primary" onclick="closeRosterManager()">'
+    + t('Xong', 'Done') + '</button></div>';
+
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+
+  // Delegated: team + position changes apply immediately (single editor).
+  panel.addEventListener('change', function (e) {
+    var sel = e.target;
+    var which = sel.getAttribute('data-roster');
+    if (!which) return;
+    var tr = sel.closest('tr');
+    if (!tr) return;
+    var id = tr.getAttribute('data-id');
+    if (which === 'team') rosterSetTeam(id, sel.value);
+    else if (which === 'pos') rosterSetPos(id, sel.value);
+  });
+
+  panel.addEventListener('click', function (e) {
+    var del = e.target.closest('[data-roster-del]');
+    if (!del) return;
+    rosterDeletePerson(del.getAttribute('data-roster-del'));
+    closeRosterManager();
+    openRosterManager();   // rebuild so the removed row disappears
+  });
+
+  document.getElementById('rosterAddBtn').onclick = function () {
+    var name = document.getElementById('rosterNewName').value.trim();
+    if (!name) { toast(t('Cần nhập họ tên', 'Name is required'), true); return; }
+    var team = document.getElementById('rosterNewTeam').value;
+    var pos = document.getElementById('rosterNewPos').value;
+    if (rosterAddPerson(name, team, pos)) {
+      closeRosterManager();
+      openRosterManager();
+    }
+  };
+}
+
+function closeRosterManager() {
+  var o = document.getElementById('rosterOverlay');
+  if (o) o.remove();
+}
+
 function renderMatrix(el) {
   var html = '<h1>' + t('Ma trận năng lực', 'Competency Matrix') + '</h1>';
   html += '<p class="page-desc">' + t('Nhấn vào ô để đánh giá mức 0–4. Mức 3 và 4 yêu cầu bằng chứng — ô không có bằng chứng sẽ được đánh dấu.', 'Click a cell to rate level 0–4. Levels 3 and 4 require supporting evidence — cells without it are flagged.') + '</p>';
@@ -1803,6 +2131,17 @@ function renderMatrix(el) {
     html += '<span class="level-chip" style="background:'+c.bg+';color:'+c.fg+';">'+n+'</span>';
   }
   html += '</span></div>';
+
+  // Roster management
+  var rosterEdits = Object.keys(rosterAdded).length + Object.keys(rosterChanged).length + Object.keys(rosterDeleted).length;
+  html += '<div class="filter-row" style="margin-top:2px;">'
+    + '<button class="btn-secondary" onclick="openRosterManager()" style="padding:6px 12px;font-size:12px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--ink);cursor:pointer;">'
+    + t('Quản lý danh sách', 'Manage roster') + '</button>'
+    + (rosterEdits
+      ? '<span style="font-size:11px;color:var(--ink-muted);align-self:center;">'
+        + rosterEdits + ' ' + t('thay đổi danh sách', 'roster edit(s)') + '</span>'
+      : '')
+    + '</div>';
 
   // Axis legend
   html += '<div class="legend"><span><span class="legend-dot" style="background:var(--axis-lean)"></span>'+t('Kỹ thuật / Ứng dụng','Technical / Application')+'</span><span><span class="legend-dot" style="background:var(--axis-soft)"></span>'+t('Hành vi','Behavioral')+'</span></div>';
@@ -2993,7 +3332,7 @@ setLang(lang);
 
 // Q12: one fetch on load. If the ESM glue already ran, it called us;
 // if not yet (or the CDN failed), this is the fallback path.
-if (window.sbReady) loadMatrixFromCloud();
+if (window.sbReady) { loadMatrixFromCloud(); loadRosterFromCloud(); }
 </script>
 </body>
 </html>
