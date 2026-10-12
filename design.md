@@ -87,6 +87,26 @@ modern-minimal
   as a JS colour map. (A.Manager `#15803D` was removed 2026-10-07 when the tier
   left the org; its `--tier-amgr` token is gone too)
 
+## Competency Matrix (SA1 fidelity)
+
+The matrix page mirrors the SA1 artifact
+(`https://sa1leancompetency.netlify.app/`, source of truth:
+`SA1 Lean Competency.html`) rather than the derived `--level-*` ramp. Scoped
+tokens, added 2026-10-12:
+
+| Token | Value | SA1 source |
+|---|---|---|
+| `--mx-fill` | `#4C6EF5` | filled level square |
+| `--mx-empty` | `#DEE3F7` | empty level square |
+| `--mx-pill-border` / `--mx-pill-fg` | `#DEE3F7` / `#64717F` | inactive filter pill |
+| `--mx-sel-bg` | `#ECEAFC` | selected level option fill |
+| `--mx-ramp-0..4` | `#EAF0FE → #C7D9FB → #9FBFF7 → #8981EA → #4C6EF5` | SA1's own ramp |
+
+- Filter pills are rounded pills (`999px`), filled `--mx-fill` when active
+- `mxLevelColor(v)` serves the matrix legend + cell editor; `levelColor()`
+  still uses `--level-0..4` for the overview histogram, donut and IDP
+- Header labels follow SA1: Họ và tên / Cấp bậc / Đạt
+
 ## Org chart
 
 Redesigned 2026-10-07 to **Design C — leadership spine + team lanes**.

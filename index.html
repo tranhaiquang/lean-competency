@@ -80,6 +80,22 @@ if (typeof window.loadMatrixFromCloud === 'function') window.loadMatrixFromCloud
      orange/green are all taken by IE / CI / TPM / Admin. */
   --tech-accent: #7C3AED;
 
+  /* ── SA1 Competency Matrix palette ──────────────────────────
+     Taken from the SA1 matrix render: level squares are #4C6EF5 filled /
+     #DEE3F7 empty; pills are filled-brand active, white + #DEE3F7 inactive;
+     the selected level option is #ECEAFC with an inset brand ring.
+     Scoped to the matrix page — --level-0..4 stay untouched elsewhere. */
+  --mx-fill: #4C6EF5;          /* filled level square */
+  --mx-empty: #DEE3F7;         /* empty level square */
+  --mx-pill-border: #DEE3F7;   /* inactive filter pill */
+  --mx-pill-fg: #64717F;       /* inactive filter pill text */
+  --mx-sel-bg: #ECEAFC;        /* selected level option fill */
+  --mx-ramp-0: #EAF0FE;
+  --mx-ramp-1: #C7D9FB;
+  --mx-ramp-2: #9FBFF7;
+  --mx-ramp-3: #8981EA;
+  --mx-ramp-4: #4C6EF5;
+
   /* Shape — SA1 uses 20px cards / 7-10px controls */
   --radius-card: 20px;
   --radius-ctl: 7px;
@@ -157,15 +173,15 @@ body {
 .page h1 { font-size: 21px; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.015em; }
 .page-desc { color: var(--ink-muted); margin: 0 0 22px; max-width: 74ch; }
 
-/* ═══ FILTER BUTTONS ═══ */
+/* ═══ FILTER BUTTONS ═══ (SA1 matrix: filled brand active, #DEE3F7 idle) */
 .filter-row { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
 .filter-btn {
-  border: 1px solid var(--border); background: var(--surface);
-  color: var(--ink-muted); padding: 4px 12px; cursor: pointer;
-  font-size: 12px; font-family: var(--font); border-radius: 0;
+  border: 1px solid var(--mx-pill-border); background: var(--surface);
+  color: var(--mx-pill-fg); padding: 4px 12px; cursor: pointer;
+  font-size: 12px; font-family: var(--font); border-radius: 999px;
 }
-.filter-btn.active { border-color: var(--primary); background: var(--primary); color: #fff; }
-.filter-btn:hover:not(.active) { border-color: var(--primary); color: var(--primary); }
+.filter-btn.active { border-color: var(--mx-fill); background: var(--mx-fill); color: #fff; }
+.filter-btn:hover:not(.active) { border-color: var(--mx-fill); color: var(--mx-fill); }
 
 /* ═══ TABLE ═══ */
 .table-wrap { overflow: auto; border: 1px solid var(--border); background: var(--surface); max-height: 70vh; }
@@ -184,8 +200,8 @@ td.met-col { text-align: right; font-size: 11.5px; color: var(--ink-muted); back
 /* ═══ CELL LEVEL GRID ═══ */
 .level-grid { display: grid; grid-template-columns: 7px 7px; grid-template-rows: 7px 7px; gap: 2px; justify-content: center; margin: 0 auto; width: 16px; }
 .level-dot { width: 7px; height: 7px; display: block; }
-.level-dot.filled { background: var(--primary); }
-.level-dot.empty { background: var(--border); }
+.level-dot.filled { background: var(--mx-fill); }
+.level-dot.empty { background: var(--mx-empty); }
 
 /* ═══ EVIDENCE FLAG ═══ */
 .ev-flag { position: absolute; top: 1px; right: 1px; width: 0; height: 0; border-top: 5px solid var(--evidence-flag); border-left: 5px solid transparent; }
@@ -208,9 +224,9 @@ td.met-col { text-align: right; font-size: 11.5px; color: var(--ink-muted); back
 .editor-panel { background: var(--surface); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 24px; max-width: 400px; width: 100%; }
 .editor-panel h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
 .editor-meta { font-size: 12px; color: var(--ink-muted); margin-bottom: 16px; }
-.level-option { cursor: pointer; border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
-.level-option.selected { border-color: var(--primary); background: var(--level-0); box-shadow: inset 0 0 0 1px var(--primary); }
-.level-option:hover:not(.selected) { border-color: var(--primary-light); }
+.level-option { cursor: pointer; border: 1px solid var(--mx-pill-border); border-radius: 8px; padding: 10px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+.level-option.selected { border-color: var(--mx-fill); background: var(--mx-sel-bg); box-shadow: inset 0 0 0 1px var(--mx-fill); }
+.level-option:hover:not(.selected) { border-color: var(--mx-fill); }
 .level-num { width: 28px; height: 28px; display: grid; place-items: center; font-size: 12px; font-weight: 700; border-radius: 4px; flex-shrink: 0; }
 .level-title { font-weight: 600; font-size: 13px; }
 .level-desc { font-size: 11px; color: var(--ink-muted); }
@@ -1476,6 +1492,15 @@ function levelColor(v) {
   return { bg: ramp[v], fg: v >= 3 ? '#FFFFFF' : '#17202B' };
 }
 function axisColor(ax) { return ax === 'C' ? 'var(--axis-soft)' : 'var(--primary)'; }
+
+// SA1's own level ramp, scoped to the Competency Matrix (legend + cell
+// editor). levelColor() stays on --level-0..4 for the overview histogram,
+// donut and IDP, which were not part of this change.
+function mxLevelColor(v) {
+  if (v === null || v === undefined) return { bg: 'var(--mx-ramp-0)', fg: 'var(--ink-muted)' };
+  var ramp = ['var(--mx-ramp-0)','var(--mx-ramp-1)','var(--mx-ramp-2)','var(--mx-ramp-3)','var(--mx-ramp-4)'];
+  return { bg: ramp[v], fg: v >= 3 ? '#FFFFFF' : '#17202B' };
+}
 function getTarget(person) { return TARGET[person.team + '|' + person.pos] || []; }
 function getScores(personId) { return matrixScores[personId] || null; }
 function getEffectiveScores(person) {
@@ -2127,7 +2152,7 @@ function renderMatrix(el) {
   });
   html += '<span style="margin-left:auto;display:flex;align-items:center;gap:4px;">';
   for (var n = 0; n <= 4; n++) {
-    var c = levelColor(n);
+    var c = mxLevelColor(n);
     html += '<span class="level-chip" style="background:'+c.bg+';color:'+c.fg+';">'+n+'</span>';
   }
   html += '</span></div>';
@@ -2156,7 +2181,7 @@ function renderMatrix(el) {
     return '<th class="skill-col" onclick="openSkillDetail('+idx+')" title="'+skillName(idx)+' ('+axisName(sk.ax)+') — '+t('xem chi tiết','click for details')+'"><span style="color:'+axisColor(sk.ax)+'">'+skillName(idx)+'</span></th>';
   }).join('');
 
-  var thead = '<thead><tr><th class="sticky-name">'+t('Họ tên','Name')+'</th><th class="sticky-tier">'+t('Cấp','Tier')+'</th>'+skillHeaders+'<th style="text-align:right;padding:6px 10px;">Met%</th></tr></thead>';
+  var thead = '<thead><tr><th class="sticky-name">'+t('Họ và tên','Name')+'</th><th class="sticky-tier">'+t('Cấp bậc','Tier')+'</th>'+skillHeaders+'<th style="text-align:right;padding:6px 10px;">'+t('Đạt','Met')+'</th></tr></thead>';
 
   var rows = filtered.map(function(person) {
     var scores = getEffectiveScores(person);
@@ -2213,7 +2238,7 @@ function openCellEditor(personId, skillIndex) {
   var targetVal = tgt[skillIndex];
   var hasEv = !!(matrixEvidence[personId] || '').trim();
 
-  var lv = ['var(--level-0)','var(--level-1)','var(--level-2)','var(--level-3)','var(--level-4)'];
+  var lv = ['var(--mx-ramp-0)','var(--mx-ramp-1)','var(--mx-ramp-2)','var(--mx-ramp-3)','var(--mx-ramp-4)'];
   var lvFg = ['#17202B','#17202B','#17202B','#FFFFFF','#FFFFFF'];
 
   var levelsHtml = LEVELS.map(function(l) {
