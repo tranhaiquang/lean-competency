@@ -49,8 +49,8 @@ the left; team membership runs across swimlanes on the right. Toggled with
   in `localStorage` and pushed to the Supabase `employees` table.
 - **Render**: `renderOrgChart()` → `orgSpineHtml()` + `orgLanesHtml()` → `orgNodeHtml()`
 - **Helpers**: `orgPlacedIds()` (IDs already drawn as nodes, so nobody is
-  listed twice), `orgLeaderOf(team)` (inverts `teamsUnder`; Huy leads both TPM
-  and TECHNOLOGY)
+  listed twice), `orgLeaderOf(team)` (inverts `teamsUnder`; Huy leads TECH;
+  and TECH)
 - **Styling**: `.orgc-*` CSS classes. Depth is `data-depth`, tier is
   `data-org-tier`. **No inline styles, no colour map in JS** — tier colour comes
   from the `--tier-*` tokens
@@ -59,10 +59,15 @@ the left; team membership runs across swimlanes on the right. Toggled with
   (`.orgc-panel` + `.orgc-scrim`, `.is-open`) showing the person's summary.
   The panel's primary button sets `idpPersonId` and `navigate('idp')`, where
   `renderIDP` preselects that person. Escape / scrim / × closes the drawer.
-- **Structure**: four Team leaders report to the S.Manager: Huy (TPM + TECH),
-  Bảo (IE), Trang (CI), Liễu (ADMIN). The ADMIN lane renders as a leader node
-  in the spine, not a staff card — the lane itself is skipped because it has no
-  unplaced staff.
+- **Structure**: five Team leads (Huy, Bảo, Trang, Liễu, Chiến) stand equal in the Reporting Line — all one level below the S.Manager, each leading their own team. No Supervisor level. The ADMIN
+  lane renders as a leader node in the spine, not a staff card — the lane itself
+  is skipped because it has no unplaced staff.
+- **Lane headcount**: the `N people` in a lane head counts staff **+ the lane's
+  team leader**, because leaders are drawn in the spine and so never appear in
+  `members` (`orgPlacedIds()` marks them placed to avoid double-listing). Huy
+  leads one lane (TECH) only — each lane's leader is counted once in its own
+  lane, which is what the org actually is.
+- **Tier ladder**: `TIER_ORDER = ["Staff","Team leader","S.Manager"]`. Hamilton is now a Team leader, on equal footing with Bảo, Trang, Liễu and Chiến, all reporting to the S.Manager. The original SA1 seniority ladder (`G. Leader < Supervisor < Sr. Manager`) is retained as historical reference only.
 - **Avatar fallback**: `bindOrgAvatars(el)` attaches `error` listeners after each
   render (the `.orgc-av::after` initial shows through) — never an inline `onerror`
 - The GM is not in `PEOPLE`, so his node renders **disabled** — no plan to open

@@ -58,7 +58,7 @@ insert into public.competency_matrix (
    3, 3, 3,
    2, 4),
 
-('21051708', '2026-10', 'Chau Khách Huy',           -- Team leader · LEAN TECHNOLOGY
+('21051708', '2026-10', 'Chau Khách Huy',           -- Supervisor · LEAN TECH
    4, 4, 3, 4, 4,
    4, 3, 3, 3,
    4, 4,
@@ -217,8 +217,8 @@ insert into public.competency_matrix (
    2, 1, 2,
    2, 2),
 
--- ── LEAN TECHNOLOGY staff ────────────────────────────────────
-('25102801', '2026-10', 'Trần Hải Quang',           -- Staff · LEAN TECHNOLOGY
+-- ── LEAN TECH staff ────────────────────────────────────
+('25102801', '2026-10', 'Trần Hải Quang',           -- Staff · LEAN TECH
    2, 2, 2, 3, 2,
    2, 2, 3, 3,
    2, 3,
@@ -230,7 +230,7 @@ insert into public.competency_matrix (
    2, 2, 2,
    3, 3),
 
-('26061101', '2026-10', 'Phạm Ngọc Minh',           -- Staff · LEAN TECHNOLOGY
+('26061101', '2026-10', 'Phạm Ngọc Minh',           -- Staff · LEAN TECH
    3, 3, 2, 3, 3,
    3, 2, 2, 2,
    3, 3,
@@ -242,7 +242,7 @@ insert into public.competency_matrix (
    2, 3, 2,
    3, 3),
 
-('26070601', '2026-10', 'Hoàng Minh Chiến',          -- Staff · LEAN TECHNOLOGY
+('26070601', '2026-10', 'Hoàng Minh Chiến',          -- Team leader · LEAN TPM
    2, 3, 2, 2, 2,
    2, 2, 2, 2,
    2, 2,

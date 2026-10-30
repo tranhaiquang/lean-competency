@@ -69,14 +69,14 @@ h2{font-size:16px;font-weight:600;letter-spacing:-0.01em;margin:0 0 4px}
 <script>
 /* ── Data ──────────────────────────────────────────────────────────── */
 var TEAM_UNASSIGNED = 'Other';
-var TEAMS = ['LEAN IE', 'LEAN CI', 'LEAN TPM', 'LEAN TECHNOLOGY'];
+var TEAMS = ['LEAN IE', 'LEAN CI', 'LEAN TPM', 'LEAN TECH'];
 
 var PEOPLE = [
   { id: "12080610", name: "Nguyễn Thị Thanh Trang", team: "LEAN CI",         pos: "Team leader" },
   { id: "14052701", name: "Nguyễn Thị Bích Liễu",   team: TEAM_UNASSIGNED,  pos: "Team leader" },
   { id: "16031603", name: "Võ Thị Thủy Tiên",       team: "LEAN IE",         pos: "Staff" },
   { id: "16111801", name: "Trần Thị Mỹ Diễm",       team: "LEAN CI",         pos: "Staff" },
-  { id: "21051708", name: "Chau Khách Huy",         team: "LEAN TECHNOLOGY", pos: "A.Manager" },
+  { id: "21051708", name: "Chau Khách Huy",         team: "LEAN TECH", pos: "A.Manager" },
   { id: "22022301", name: "Trương Thị Cẩm Tú",      team: "LEAN IE",         pos: "Staff" },
   { id: "23032701", name: "Vương Quốc Bảo",         team: "LEAN IE",         pos: "Team leader" },
   { id: "23040301", name: "Nguyễn Minh Quang",      team: TEAM_UNASSIGNED,  pos: "S.Manager" },
@@ -85,11 +85,11 @@ var PEOPLE = [
   { id: "25040201", name: "Nguyễn Thanh Bình",      team: "LEAN CI",         pos: "Staff" },
   { id: "25051501", name: "Lê Thị Hồng Vân",        team: "LEAN IE",         pos: "Staff" },
   { id: "25102001", name: "Phạm Duy Hậu",           team: "LEAN TPM",        pos: "Staff" },
-  { id: "25102801", name: "Trần Hải Quang",         team: "LEAN TECHNOLOGY", pos: "Staff" },
+  { id: "25102801", name: "Trần Hải Quang",         team: "LEAN TECH", pos: "Staff" },
   { id: "25110301", name: "Nguyễn Thế Quân",        team: "LEAN CI",         pos: "Staff" },
   { id: "26031603", name: "Đoàng Huỳnh Minh Trung", team: "LEAN TPM",        pos: "Staff" },
-  { id: "26061101", name: "Phạm Ngọc Minh",         team: "LEAN TECHNOLOGY", pos: "Staff" },
-  { id: "26070601", name: "Hoàng Minh Chiến",       team: "LEAN TECHNOLOGY", pos: "Staff" }
+  { id: "26061101", name: "Phạm Ngọc Minh",         team: "LEAN TECH", pos: "Staff" },
+  { id: "26070601", name: "Hoàng Minh Chiến",       team: "LEAN TECH", pos: "Staff" }
 ];
 
 var lang = 'en';
@@ -106,7 +106,7 @@ var ORG_CHART = {
     '21051708': ['23032701', '12080610']
   },
   teamsUnder: {
-    '21051708': ['LEAN TPM', 'LEAN TECHNOLOGY'],
+    '21051708': ['LEAN TPM', 'LEAN TECH'],
     '23032701': ['LEAN IE'],
     '12080610': ['LEAN CI'],
     '23040301': [TEAM_UNASSIGNED]
@@ -118,7 +118,7 @@ var ORG_TEAM_LABEL = {
   'LEAN IE':         'IE',
   'LEAN CI':         'CI',
   'LEAN TPM':        'TPM',
-  'LEAN TECHNOLOGY': 'TECH'
+  'LEAN TECH': 'TECH'
 };
 function orgTeamLabel(team) {
   if (team === TEAM_UNASSIGNED) return 'Admin';

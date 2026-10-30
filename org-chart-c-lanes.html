@@ -110,7 +110,7 @@ body{
 .node[data-accent="LEAN IE"]{--node-accent:var(--primary)}
 .node[data-accent="LEAN CI"]{--node-accent:var(--axis-soft)}
 .node[data-accent="LEAN TPM"]{--node-accent:var(--axis-language)}
-.node[data-accent="LEAN TECHNOLOGY"]{--node-accent:var(--tech-accent)}
+.node[data-accent="LEAN TECH"]{--node-accent:var(--tech-accent)}
 .node[data-accent="Other"]{--node-accent:var(--ink-muted)}
 .node[data-accent="smgr"]{--node-accent:var(--tier-smgr)}
 .node[data-accent="gm"]{--node-accent:var(--tier-gm)}
@@ -129,7 +129,7 @@ body{
 .lane[data-team="LEAN IE"]{--lane-accent:var(--primary)}
 .lane[data-team="Other"]{--lane-accent:var(--ink-muted)}
 .lane[data-team="LEAN TPM"]{--lane-accent:var(--axis-language)}
-.lane[data-team="LEAN TECHNOLOGY"]{--lane-accent:var(--tech-accent)}
+.lane[data-team="LEAN TECH"]{--lane-accent:var(--tech-accent)}
 .lane-head{padding:var(--sp-3);border-bottom:1px solid var(--border);
   background:color-mix(in oklab,var(--lane-accent,var(--primary)) 8%,var(--header))}
 .lane-head .t{display:flex;align-items:baseline;gap:var(--sp-2)}
@@ -254,14 +254,14 @@ body{
 <script>
 /* ── Data (mirrors index.html — single source of truth there) ────── */
 var TEAM_UNASSIGNED = 'Other';
-var TEAM_ORDER = ['LEAN CI','LEAN IE', TEAM_UNASSIGNED, 'LEAN TPM','LEAN TECHNOLOGY'];
+var TEAM_ORDER = ['LEAN CI','LEAN IE', TEAM_UNASSIGNED, 'LEAN TPM','LEAN TECH'];
 
 var PEOPLE = [
   { id:'12080610', name:'Nguyễn Thị Thanh Trang', team:'LEAN CI',         pos:'Team leader' },
   { id:'14052701', name:'Nguyễn Thị Bích Liễu',   team:TEAM_UNASSIGNED,  pos:'Team leader' },
   { id:'16031603', name:'Võ Thị Thủy Tiên',       team:'LEAN IE',         pos:'Staff' },
   { id:'16111801', name:'Trần Thị Mỹ Diễm',       team:'LEAN CI',         pos:'Staff' },
-  { id:'21051708', name:'Chau Khách Huy',         team:'LEAN TECHNOLOGY', pos:'Team leader' },
+  { id:'21051708', name:'Chau Khách Huy',         team:'LEAN TECH', pos:'Team leader' },
   { id:'22022301', name:'Trương Thị Cẩm Tú',      team:'LEAN IE',         pos:'Staff' },
   { id:'23032701', name:'Vương Quốc Bảo',         team:'LEAN IE',         pos:'Team leader' },
   { id:'23040301', name:'Nguyễn Minh Quang',      team:TEAM_UNASSIGNED,  pos:'S.Manager' },
@@ -270,11 +270,11 @@ var PEOPLE = [
   { id:'25040201', name:'Nguyễn Thanh Bình',      team:'LEAN CI',         pos:'Staff' },
   { id:'25051501', name:'Lê Thị Hồng Vân',        team:'LEAN IE',         pos:'Staff' },
   { id:'25102001', name:'Phạm Duy Hậu',           team:'LEAN TPM',        pos:'Staff' },
-  { id:'25102801', name:'Trần Hải Quang',         team:'LEAN TECHNOLOGY', pos:'Staff' },
+  { id:'25102801', name:'Trần Hải Quang',         team:'LEAN TECH', pos:'Staff' },
   { id:'25110301', name:'Nguyễn Thế Quân',        team:'LEAN CI',         pos:'Staff' },
   { id:'26031603', name:'Đoàng Huỳnh Minh Trung', team:'LEAN TPM',        pos:'Staff' },
-  { id:'26061101', name:'Phạm Ngọc Minh',         team:'LEAN TECHNOLOGY', pos:'Staff' },
-  { id:'26070601', name:'Hoàng Minh Chiến',       team:'LEAN TECHNOLOGY', pos:'Staff' }
+  { id:'26061101', name:'Phạm Ngọc Minh',         team:'LEAN TECH', pos:'Staff' },
+  { id:'26070601', name:'Hoàng Minh Chiến',       team:'LEAN TECH', pos:'Staff' }
 ];
 
 var ORG = {
@@ -284,14 +284,14 @@ var ORG = {
   // leaders are siblings under the S.Manager.
   reports: { '23040301':['21051708','23032701','12080610'] },
   teamsUnder: {
-    '21051708':['LEAN TPM','LEAN TECHNOLOGY'],
+    '21051708':['LEAN TPM','LEAN TECH'],
     '23032701':['LEAN IE'],
     '12080610':['LEAN CI'],
     '23040301':[TEAM_UNASSIGNED]
   }
 };
 
-var TEAM_LABEL = { 'LEAN IE':'IE','LEAN CI':'CI','LEAN TPM':'TPM','LEAN TECHNOLOGY':'TECH' };
+var TEAM_LABEL = { 'LEAN IE':'IE','LEAN CI':'CI','LEAN TPM':'TPM','LEAN TECH':'TECH' };
 
 var SKILLS = [
   {n:'6S',ax:'A'},{n:'8 Wastes',ax:'A'},{n:'GEMBA',ax:'A'},{n:'Time Study & ECRS',ax:'A'},{n:'VSM',ax:'A'},
@@ -312,10 +312,10 @@ TARGET['LEAN CI|Staff']       =[3,2,2,2,2,1,2,2,2,3,3,2,2,1,2,2,0,1,1,1,1,1,1,1,
 TARGET['LEAN CI|Team leader'] =[3,2,4,2,2,3,2,2,2,3,4,3,3,4,2,2,0,2,2,2,2,2,2,2,2,2,2,1];
 TARGET['LEAN CI|A.Manager']   =[3,2,3,2,2,2,2,2,2,3,4,2,2,3,2,2,0,2,2,2,2,2,2,2,2,2,2,0];
 TARGET['LEAN CI|S.Manager']   =[3,2,4,2,2,3,2,2,2,3,4,3,3,4,2,2,2,3,3,3,3,3,3,3,3,3,3,2];
-TARGET['LEAN TECHNOLOGY|Staff']      =[2,2,2,2,2,1,3,3,3,2,2,2,2,1,2,2,0,1,1,1,1,1,1,1,1,1,1,0];
-TARGET['LEAN TECHNOLOGY|Team leader']=[2,2,4,2,2,3,3,3,3,2,4,3,3,4,2,2,0,2,2,2,2,2,2,2,2,2,2,1];
-TARGET['LEAN TECHNOLOGY|A.Manager']  =[2,2,3,2,2,2,3,3,3,2,3,2,2,3,2,2,0,2,2,2,2,2,2,2,2,2,2,0];
-TARGET['LEAN TECHNOLOGY|S.Manager']  =[2,2,4,2,2,3,3,3,3,2,4,3,3,4,2,2,2,3,3,3,3,3,3,3,3,3,3,2];
+TARGET['LEAN TECH|Staff']      =[2,2,2,2,2,1,3,3,3,2,2,2,2,1,2,2,0,1,1,1,1,1,1,1,1,1,1,0];
+TARGET['LEAN TECH|Team leader']=[2,2,4,2,2,3,3,3,3,2,4,3,3,4,2,2,0,2,2,2,2,2,2,2,2,2,2,1];
+TARGET['LEAN TECH|A.Manager']  =[2,2,3,2,2,2,3,3,3,2,3,2,2,3,2,2,0,2,2,2,2,2,2,2,2,2,2,0];
+TARGET['LEAN TECH|S.Manager']  =[2,2,4,2,2,3,3,3,3,2,4,3,3,4,2,2,2,3,3,3,3,3,3,3,3,3,3,2];
 TARGET['LEAN TPM|Staff']       =[2,2,2,2,2,1,3,3,3,2,2,2,2,1,2,2,0,1,1,1,1,1,1,1,1,1,1,0];
 TARGET['LEAN TPM|Team leader'] =[2,2,4,2,2,3,3,3,3,2,4,3,3,4,2,2,0,2,2,2,2,2,2,2,2,2,2,1];
 TARGET['LEAN TPM|A.Manager']   =[2,2,3,2,2,2,3,3,3,2,3,2,2,3,2,2,0,2,2,2,2,2,2,2,2,2,2,0];

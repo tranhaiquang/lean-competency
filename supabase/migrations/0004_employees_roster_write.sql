@@ -81,7 +81,11 @@ grant select, insert, update, delete on public.employees
 -- ═══════════════════════════════════════════════════════════════
 
 -- ── Verify: expect 18 rows before any roster edit ──────────────
+-- Huy (21051708) was promoted to Supervisor on 2026-10-13, so the
+-- leadership split is 5 Team leaders, no Supervisor; Huy (TECH) reports to
+-- the S.Manager and the other four (IE/CI/ADMIN/TPM) report to him.
 select count(*) as rows,
        count(*) filter (where seniority = 'Team leader') as team_leaders,
-       count(*) filter (where seniority = 'S.Manager')  as senior_managers
+       count(*) filter (where seniority = 'Supervisor')   as supervisors,
+       count(*) filter (where seniority = 'S.Manager')    as senior_managers
 from public.employees;
