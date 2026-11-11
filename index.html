@@ -14,7 +14,8 @@ const sb = createClient(
 );
 window.sb = sb;
 window.sbReady = true;
-if (typeof window.loadMatrixFromCloud === 'function') window.loadMatrixFromCloud();
+window.dispatchEvent(new Event('supabase-ready'));
+// Note: the matrix load starts after the user signs in (see afterAuth in the app script) — not here.
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
@@ -690,6 +691,11 @@ select { padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px;
   .menu-toggle { display: block !important; }
 }
 .menu-toggle { display: none; position: fixed; top: 10px; left: 10px; z-index: 101; background: var(--primary); color: #fff; border: 0; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 16px; }
+/* ── Viewer = read-only: inputs & write controls inert ────── */
+body.viewer-readonly input, body.viewer-readonly select, body.viewer-readonly textarea,
+body.viewer-readonly td[onclick], body.viewer-readonly .course-add-btn, body.viewer-readonly .del-btn,
+body.viewer-readonly .rost-bar, body.viewer-readonly .roster-toolbar { pointer-events:none !important; opacity:.65; }
+#signOutLink { cursor:pointer; margin-right:8px; }
 </style>
 </head>
 <body>
@@ -727,8 +733,8 @@ select { padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px;
       <button class="nav-item" data-page="exam"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span> <span data-i18n="nav_exam">Điểm thi</span></button>
     </div>
     <div class="sidebar-footer">
-      <span id="userLabel">Admin &middot; full access</span>
-      <a onclick="openSettings()">⚙</a>
+      <span id="userLabel">—</span>
+      <span><a id="signOutLink" href="login.html">Đăng nhập</a><a onclick="openSettings()">⚙</a></span>
     </div>
   </nav>
 
@@ -736,6 +742,7 @@ select { padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px;
   <main class="main" id="mainContent">
     <!-- Pages rendered by JS -->
   </main>
+
 </div>
 
 <!-- ORG person drawer (mirrors org-chart-c-lanes.html) -->
@@ -1460,12 +1467,7 @@ var AXES_TABLE = {
     { axis:"Behavioral", count:9, method:"Observation, feedback and soft-skills / language assessments" }
   ]
 };
-var ACCOUNTS = [
-  { user:"Admin", pass:"tai123", role:"admin", team:null },
-  { user:"IE", pass:"nga123", role:"lead", team:"IE" },
-  { user:"CI", pass:"tinh123", role:"lead", team:"CI" },
-  { user:"Tech", pass:"vu123", role:"lead", team:"TECH/PE" }
-];
+
 // Monthly periods: 2026-01 → current month (Q25/Q26). Generated so the
 // list rolls forward on its own; keys match competency_matrix.period
 // ('YYYY-MM'), so PERIOD_LABELS below is generated too.
@@ -1503,14 +1505,40 @@ var matrixConfirmed = {};
 var examScores = {};
 var calendarStatus = {};
 var proposals = [];
+var COURSES_EN = [];
+var sessionUids = [];
+var trainingSnapshot = '';
+var trainingSyncWarned = false;
+var appRole = 'viewer';          // 'viewer' | 'editor' — resolved at sign-in
+var authBooted = false;
 var strictEvidence = false;
-var calMonth = 1;
+var calMonth = new Date().getMonth() + 1;
 var courseYear = 2026;
 var courseRan = {};
 // Person preselected on the IDP page; set by clicking an org-chart node.
 var idpPersonId = null;
 var coursePass = {};
 var courseDecision = {};
+
+// Uids for calendar sessions: deterministic id per SEEDED session (so every
+// browser that pushes gets the same primary keys, no duplicates), random for
+// user-added sessions. Stored alongside the schedule in localStorage.
+function normalizeSessionUids() {
+  if (!Array.isArray(sessionUids)) sessionUids = [];
+  for (var i = 0; i < SCHEDULE.length; i++) {
+    if (!sessionUids[i]) {
+      sessionUids[i] = (i < 24)
+        ? 'ses-' + ('00' + (i + 1)).slice(-2)
+        : 'ses-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    }
+  }
+  sessionUids = sessionUids.slice(0, SCHEDULE.length);
+  trainingSnapshot = trainingKey();
+}
+
+function trainingKey() {
+  return JSON.stringify([COURSES, SCHEDULE, SCHEDULE_EN, sessionUids]);
+}
 
 // Load from localStorage
 function loadState() {
@@ -1532,7 +1560,12 @@ function loadState() {
     if (d.rosterAdded) rosterAdded = d.rosterAdded;
     if (d.rosterChanged) rosterChanged = d.rosterChanged;
     if (d.rosterDeleted) rosterDeleted = d.rosterDeleted;
+    if (Array.isArray(d.courses)) COURSES = d.courses;
+    if (Array.isArray(d.schedule)) SCHEDULE = d.schedule;
+    if (Array.isArray(d.scheduleEn)) SCHEDULE_EN = d.scheduleEn;
+    if (Array.isArray(d.sessionUids)) sessionUids = d.sessionUids;
   } catch(e) {}
+  normalizeSessionUids();
   applyRosterDelta();
 }
 
@@ -1542,8 +1575,12 @@ function saveState() {
     examScores: examScores, calendarStatus: calendarStatus, proposals: proposals,
     lang: lang, strictEvidence: strictEvidence, calMonth: calMonth,
     courseYear: courseYear, courseRan: courseRan, coursePass: coursePass, courseDecision: courseDecision,
-    rosterAdded: rosterAdded, rosterChanged: rosterChanged, rosterDeleted: rosterDeleted
+    rosterAdded: rosterAdded, rosterChanged: rosterChanged, rosterDeleted: rosterDeleted,
+    courses: COURSES, schedule: SCHEDULE, scheduleEn: SCHEDULE_EN, sessionUids: sessionUids
   }));
+  // If courses/calendar changed, push them to the cloud too
+  var key = trainingKey();
+  if (key !== trainingSnapshot) { trainingSnapshot = key; pushTrainingToCloud(); }
 }
 
 function resetState() {
@@ -1708,17 +1745,21 @@ function renderOverview(el) {
   PEOPLE.forEach(function(p) {
     var scores = getEffectiveScores(p);
     var tgt = getTarget(p);
-    var met = 0, measured = 0;
+    var met = 0, measured = 0, assessed = 0;
     scores.forEach(function(v, i) {
-      if (v !== null && v !== undefined) {
-        measured++;
-        if (v >= tgt[i]) met++;
-        else totalGaps += (tgt[i] - v);
-      } else { totalGaps += tgt[i]; }
+      if (v === null || v === undefined) {
+        // Nobody is required to reach a zero-target skill, so it counts as met
+        if (tgt[i] === 0) { measured++; met++; } else { totalGaps += tgt[i]; }
+        return;
+      }
+      assessed++;
+      measured++;
+      if (v >= tgt[i]) met++;
+      else totalGaps += (tgt[i] - v);
     });
     totalMet += met;
     totalMeasured += measured;
-    if (measured > 0 && met === measured) peopleAt100++;
+    if (assessed > 0 && met === measured) peopleAt100++;
   });
   var avgMet = totalMeasured > 0 ? Math.round(totalMet / totalMeasured * 100) : 0;
 
@@ -1732,7 +1773,7 @@ function renderOverview(el) {
         sum += (scores[i] - tgt[i]);
         count++;
         if (scores[i] >= tgt[i]) metCount++;
-      } else { sum -= tgt[i]; count++; }
+      } else { sum -= tgt[i]; count++; if (tgt[i] === 0) metCount++; }
     });
     var avg = count > 0 ? sum / count : 0;
     return { name: skillName(i), gap: avg, ax: sk.ax, met: metCount, total: PEOPLE.length };
@@ -1781,6 +1822,7 @@ function renderOverview(el) {
         else { ts.funcScore += v; ts.funcTarget += tgt[i]; }
       } else {
         ts.gaps += tgt[i];
+        if (tgt[i] === 0) { ts.measured++; ts.met++; }
         if (SKILLS[i].ax === 'C') ts.coreTarget += tgt[i];
         else ts.funcTarget += tgt[i];
       }
@@ -1807,6 +1849,7 @@ function renderOverview(el) {
         else { ts.funcScore += v; ts.funcTarget += tgt[i]; }
       } else {
         ts.gaps += tgt[i];
+        if (tgt[i] === 0) { ts.measured++; ts.met++; }
         if (SKILLS[i].ax === 'C') ts.coreTarget += tgt[i];
         else ts.funcTarget += tgt[i];
       }
@@ -2059,7 +2102,10 @@ function rosterDeletePerson(id) {
   if (!confirm(t('Xóa ' + p.name + ' khỏi danh sách? Điểm đánh giá của họ cũng sẽ bị xóa.',
                 'Remove ' + p.name + ' from the roster? Their assessment scores will be deleted too.'))) return;
 
-  if (BASE_PEOPLE.some(function (x) { return x.id === id; })) rosterDeleted[id] = true;
+  // Always mark for cloud deletion — an added-then-deleted person would
+  // otherwise still exist in the employees table and be re-fetched on the
+  // next page load, resurrecting them locally.
+  rosterDeleted[id] = true;
   delete rosterAdded[id];
   delete rosterChanged[id];
   purgePersonData(id);
@@ -2073,6 +2119,7 @@ function rosterDeletePerson(id) {
 var rosterSyncWarned = false;
 
 function syncRosterToCloud() {
+  if (appRole === 'viewer') return;   // viewers' roster edits stay local
   if (!sb) return;
   var baseIds = {};
   BASE_PEOPLE.forEach(function (p) { baseIds[p.id] = true; });
@@ -2286,6 +2333,7 @@ function renderMatrix(el) {
       var val = scores[i];
       var isNull = val === null || val === undefined;
       if (!isNull) { total++; if (val >= tgt[i]) met++; }
+      else if (tgt[i] === 0) { met++; }
       var c = levelColor(val);
       var dots = '';
       for (var j = 0; j < 4; j++) {
@@ -2318,6 +2366,13 @@ function renderMatrix(el) {
   html += '<div class="table-wrap"><table style="width:100%;">'+thead+'<tbody>'+rows+'</tbody></table></div>';
   el.innerHTML = html;
   bindRosterToolbar(el);
+}
+
+function delCourse(i) {
+  if (!confirm(t('Xóa khóa học này?', 'Delete this course?'))) return;
+  COURSES.splice(i, 1);
+  saveState();
+  renderPage();
 }
 
 // ═══════════════════════════════════════════
@@ -2544,6 +2599,33 @@ function renderScale(el) {
 
 var calSelectedSession = null;
 
+function addCalendarSession() {
+  var a = SCHEDULE.filter(function (s) { return s[0] === calMonth && s[1] === 'A'; }).length;
+  var b = SCHEDULE.filter(function (s) { return s[0] === calMonth && s[1] === 'B'; }).length;
+  var letter = a <= b ? 'A' : 'B';
+  var uid = 'ses-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  SCHEDULE.push([calMonth, letter, 'NEW-' + Date.now(), t('Buổi đào tạo mới', 'New session'), t('Nạp kiến thức', 'Knowledge input'), 'Toàn hệ thống', 2, 'Lean Team', '', '']);
+  SCHEDULE_EN.push(['New training session', 'Knowledge input', 'Whole system', 'Lean Team', '', '']);
+  sessionUids.push(uid);
+  calSelectedSession = uid;
+  saveState(); renderPage();
+}
+
+function deleteCalendarSession(uid) {
+  var idx = sessionUids.indexOf(uid);
+  if (idx < 0) return;
+  if (!confirm(t('Xóa buổi đào tạo này?', 'Delete this session?'))) return;
+  SCHEDULE.splice(idx, 1);
+  SCHEDULE_EN.splice(idx, 1);
+  sessionUids.splice(idx, 1);
+  // calendarStatus is keyed by uid, so no index shifting is needed; just drop the deleted key
+  var cs = {};
+  Object.keys(calendarStatus).forEach(function (k) { if (k !== uid) cs[k] = calendarStatus[k]; });
+  calendarStatus = cs;
+  calSelectedSession = null;
+  saveState(); renderPage();
+}
+
 function renderCalendar(el) {
   var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   var monthsVI = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
@@ -2568,10 +2650,10 @@ function renderCalendar(el) {
   html += '<span><i style="background:#F6E8E6;border:1px solid #E8C7C2;"></i>'+t('Hoãn','Cancelled')+'</span>';
   html += '</div>';
 
-  // Get sessions for this month
+  // Get sessions for this month (uid-keyed — stable across adds/deletes)
   var monthSessions = [];
   SCHEDULE.forEach(function(s, i) {
-    if (s[0] === calMonth) monthSessions.push({ idx: i, data: s, en: SCHEDULE_EN[i] });
+    if (s[0] === calMonth) monthSessions.push({ idx: i, uid: sessionUids[i], data: s, en: SCHEDULE_EN[i] });
   });
 
   // Compute calendar grid for this month
@@ -2608,23 +2690,24 @@ function renderCalendar(el) {
       if (isA || isB) {
         var cls = isA ? 'session-a' : 'session-b';
         var title = lang === 'vi' ? ms.data[3] : ms.en[0];
-        html += '<div class="cal-day-badge '+cls+'" onclick="calSelectedSession='+ms.idx+';renderPage();" title="'+title+'">'+letter+' · '+title.substring(0,20)+'</div>';
+        html += '<div class="cal-day-badge '+cls+'" onclick="calSelectedSession=\''+ms.uid+'\';renderPage();" title="'+title+'">'+letter+' · '+title.substring(0,20)+'</div>';
       }
     });
     html += '</div>';
   }
   html += '</div></div>';
 
-  // RIGHT: Session detail sidebar
+  // RIGHT: Session detail sidebar — user can add sessions for this month
   html += '<div class="cal-sidebar">';
+  html += '<button class="course-add-btn" onclick="addCalendarSession()">+ ' + t('Thêm buổi đào tạo', 'Add session') + '</button>';
   monthSessions.forEach(function(ms) {
     var letter = ms.data[1];
     var title = lang === 'vi' ? ms.data[3] : ms.en[0];
     var type = lang === 'vi' ? ms.data[4] : ms.en[1];
     var owner = lang === 'vi' ? ms.data[7] : ms.en[3];
-    var isActive = calSelectedSession === ms.idx;
+    var isActive = calSelectedSession === ms.uid;
     var cls = letter === 'B' ? ' type-b' : '';
-    html += '<button class="cal-session-card'+cls+(isActive?' active':'')+'" onclick="calSelectedSession='+ms.idx+';renderPage();">';
+    html += '<button class="cal-session-card'+cls+(isActive?' active':'')+'" onclick="calSelectedSession=\''+ms.uid+'\';renderPage();">';
     html += '<div class="session-label">'+letter+' · '+t('Tuần','Week')+' '+(letter==='A'?'2':'4')+'</div>';
     html += '<div class="session-title">'+title+'</div>';
     html += '<div class="session-meta">'+t('Chủ trì','Owner')+': '+owner+'</div>';
@@ -2634,10 +2717,11 @@ function renderCalendar(el) {
 
   html += '</div>'; // cal-layout
 
-  // Session detail panel
-  if (calSelectedSession !== null && SCHEDULE[calSelectedSession]) {
-    var ms = SCHEDULE[calSelectedSession];
-    var en = SCHEDULE_EN[calSelectedSession] || [];
+  // Session detail panel (calSelectedSession is a uid)
+  var si = sessionUids.indexOf(calSelectedSession);
+  if (calSelectedSession !== null && si >= 0) {
+    var ms = SCHEDULE[si];
+    var en = SCHEDULE_EN[si] || [];
     var title = lang === 'vi' ? ms[3] : en[0];
     var type = lang === 'vi' ? ms[4] : en[1];
     var audience = lang === 'vi' ? ms[5] : en[2];
@@ -2645,6 +2729,7 @@ function renderCalendar(el) {
     var activity = lang === 'vi' ? ms[8] : en[4];
     var evidence = lang === 'vi' ? ms[9] : en[5];
     var status = calendarStatus[calSelectedSession] || STATUSES[0];
+    var uid = calSelectedSession;
     var statusLabel = STATUS_LABEL[lang][status];
     var statusCls = status === STATUSES[0] ? 'planned' : status === STATUSES[1] ? 'in-progress' : status === STATUSES[2] ? 'done' : 'cancelled';
 
@@ -2660,11 +2745,37 @@ function renderCalendar(el) {
     html += '<div class="cal-detail-row"><strong>'+t('Bằng chứng mong đợi','Expected evidence')+':</strong></div>';
     html += '<div style="font-size:12px;margin-bottom:12px;">'+evidence+'</div>';
     html += '<div><label style="font-size:11px;font-weight:600;color:var(--ink-muted);">'+t('Trạng thái','Status')+': </label>';
-    html += '<select onchange="calendarStatus['+calSelectedSession+']=this.value;saveState();renderPage();" style="font-size:11px;padding:3px 6px;">';
+    html += '<select onchange="calendarStatus[\''+uid+'\']=this.value;saveState();renderPage();" style="font-size:11px;padding:3px 6px;">';
     STATUSES.forEach(function(st) {
       html += '<option value="'+st+'"'+(status===st?' selected':'')+'>'+STATUS_LABEL[lang][st]+'</option>';
     });
     html += '</select></div>';
+
+    // Inline editor — VI row is authoritative; edits mirror text into the EN row
+    var i = si;
+    var enc = function(v) { return orgEscape(v == null ? '' : v); };
+    var inp = function(label, val, attrs) {
+      return '<label style="display:block;font-size:10.5px;color:var(--ink-muted);margin:6px 0 2px;">' + label + '</label>'
+        + '<input ' + attrs + ' value="' + enc(val) + '" style="width:100%;box-sizing:border-box;font-size:12px;padding:4px 6px;border:1px solid var(--border);background:#fff;color:var(--ink);border-radius:4px;">';
+    };
+    var mirror = function(idx, enIdx, viPos) {
+      // Save to VI row + mirror to EN row, then re-render the calendar
+      return 'SCHEDULE[' + i + '][' + viPos + ']=this.value;if(SCHEDULE_EN[' + i + '])SCHEDULE_EN[' + i + '][' + enIdx + ']=this.value;saveState();renderPage();';
+    };
+    html += '<fieldset style="margin-top:14px;border:1px solid var(--row-border);border-radius:6px;padding:10px 12px;">';
+    html += '<legend style="font-size:10.5px;font-weight:700;color:var(--ink-muted);padding:0 6px;">' + t('Chỉnh sửa buổi', 'Edit session') + '</legend>';
+    html += inp(t('Tháng', 'Month'), ms[0], 'type="number" min="1" max="12" onchange="SCHEDULE[' + i + '][0]=+this.value;saveState();renderPage();"');
+    html += inp(t('Buổi', 'Session letter (A/B)'), ms[1], 'onchange="SCHEDULE[' + i + '][1]=(this.value||&quot;A&quot;).toUpperCase();saveState();renderPage();"');
+    html += inp(t('Mã khóa', 'Course code'), ms[2], 'onchange="SCHEDULE[' + i + '][2]=this.value;saveState();"');
+    html += inp(t('Tiêu đề', 'Title'), title, 'onchange="' + mirror(i, 0, 3) + '"');
+    html += inp(t('Loại buổi', 'Session type'), type, 'onchange="' + mirror(i, 1, 4) + '"');
+    html += inp(t('Đối tượng', 'Audience'), audience, 'onchange="' + mirror(i, 2, 5) + '"');
+    html += inp(t('Số giờ', 'Hours'), ms[6], 'type="number" min="0" onchange="SCHEDULE[' + i + '][6]=+this.value;saveState();"');
+    html += inp(t('Chủ trì', 'Owner'), owner, 'onchange="' + mirror(i, 3, 7) + '"');
+    html += inp(t('Hoạt động giữa buổi', 'Between-session activity'), activity, 'onchange="' + mirror(i, 4, 8) + '"');
+    html += inp(t('Bằng chứng', 'Expected evidence'), evidence, 'onchange="' + mirror(i, 5, 9) + '"');
+    html += '</fieldset>';
+    html += '<button class="del-btn" style="margin-top:10px;" onclick="deleteCalendarSession(\'' + uid + '\')">' + t('Xóa buổi này', 'Delete session') + '</button>';
     html += '</div>';
   } else {
     html += '<p style="color:#A9B4BF;font-size:12.5px;margin-top:16px;">'+t('Chọn một buổi trên lịch để xem chi tiết.','Pick a session on the calendar to see details.')+'</p>';
@@ -2761,61 +2872,16 @@ function renderCourses(el) {
       // Certified count
       html += '<td class="c"><span class="cert-count '+(certCount>0?'has':'none')+'" title="'+(certCount>0?(COURSE_CERTS[c[0]]||[]).join(', '):'')+'">'+certCount+'</span></td>';
       // Delete
-      html += '<td><button class="del-btn" data-di="'+idx+'" onclick="var i=+this.dataset.di;if(confirm("'+t('Xóa khóa học này?','Delete this course?')+'")){COURSES.splice(i,1);saveState();renderPage();}">'+t('Xóa','Delete')+'</button></td>';
+      html += '<td><button class="del-btn" data-di="'+idx+'" onclick="delCourse(+this.dataset.di)">'+t('Xóa','Delete')+'</button></td>';
       html += '</tr>';
     });
 
     html += '</tbody></table></div>';
-    html += '<button class="course-add-btn" onclick="COURSES.push([&quot;NEW&quot;,&quot;'+t('Khóa học mới','New course')+'&quot;,&quot;'+(catIdx<2?'A':'C')+'&quot;,&quot;Staff / L1&quot;,0,2,8,&quot;'+t('Đầu ra','Output')+'&quot;,'+catIdx+']);saveState();renderPage();">+ '+t('Thêm khóa học','Add course')+'</button>';
+    html += '<button class="course-add-btn" onclick="COURSES.push([&quot;NEW-&quot;+Date.now(),&quot;'+t('Khóa học mới','New course')+'&quot;,&quot;'+(catIdx<2?'A':'C')+'&quot;,&quot;Staff / L1&quot;,0,2,8,&quot;'+t('Đầu ra','Output')+'&quot;,'+catIdx+']);saveState();renderPage();">+ '+t('Thêm khóa học','Add course')+'</button>';
     html += '</div>';
   });
 
   el.innerHTML = html;
-}
-
-function openCourseDetail(idx) {
-  var c = COURSES[idx];
-  var en = COURSES_EN[idx] || [];
-  var catLabels = ['Internal','Certification','Soft-skills','Tools'];
-
-  var overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
-
-  var panel = document.createElement('div');
-  panel.className = 'modal';
-
-  var html = '<button class="modal-close" onclick="this.closest(\'.modal-overlay\').remove()">&times;</button>';
-  html += '<h2>'+c[0]+'</h2>';
-  html += '<div style="font-size:14px;margin-bottom:12px;">'+(lang==='vi'?c[1]:en[0])+'</div>';
-  html += '<table style="width:100%;font-size:13px;"><tbody>';
-  html += '<tr><td style="font-weight:600;width:120px;">'+t('Trục','Axis')+'</td><td>'+axisName(c[2])+'</td></tr>';
-  html += '<tr><td style="font-weight:600;">'+t('Cấp','Tier')+'</td><td>'+c[3]+'</td></tr>';
-  html += '<tr><td style="font-weight:600;">'+t('Mức yêu cầu','Required Level')+'</td><td>'+c[4]+'</td></tr>';
-  html += '<tr><td style="font-weight:600;">'+t('Số người cần','People Needed')+'</td><td>'+c[5]+'</td></tr>';
-  html += '<tr><td style="font-weight:600;">'+t('Số giờ','Hours')+'</td><td>'+c[6]+'</td></tr>';
-  html += '<tr><td style="font-weight:600;">'+t('Loại','Category')+'</td><td>'+catLabels[c[8]||0]+'</td></tr>';
-  html += '<tr><td style="font-weight:600;">'+t('Đầu ra','Output')+'</td><td>'+(lang==='vi'?c[7]:(en[1]||c[7]))+'</td></tr>';
-  html += '</tbody></table>';
-
-  // People who need this course
-  var needPeople = PEOPLE.filter(function(p) {
-    var tgt = getTarget(p);
-    var scores = getEffectiveScores(p);
-    var skIdx = SKILLS.findIndex(function(sk) { return SKILL_COURSE[SKILLS.indexOf(sk)] === c[0]; });
-    return skIdx >= 0 && scores[skIdx] !== null && scores[skIdx] !== undefined && scores[skIdx] < tgt[skIdx];
-  });
-
-  if (needPeople.length > 0) {
-    html += '<div style="margin-top:16px;font-weight:600;">'+t('Người cần khóa học này:','People who need this course:')+'</div>';
-    html += '<div style="font-size:12px;color:var(--ink-muted);margin-top:4px;">';
-    needPeople.forEach(function(p) { html += p.name + ' (' + p.team + ') &middot; '; });
-    html += '</div>';
-  }
-
-  panel.innerHTML = html;
-  overlay.appendChild(panel);
-  document.body.appendChild(overlay);
 }
 
 // ═══════════════════════════════════════════
@@ -3376,6 +3442,7 @@ function loadMatrixFromCloud() {
 
 // ── Save (optimistic: local array is already updated) ────────
 function pushRowToCloud(personId) {
+  if (appRole === 'viewer') return;   // viewers' edits stay local; RLS would reject anyway
   if (!sb) { sbDirty[personId] = true; return; }
   var person = PEOPLE.find(function (p) { return p.id === personId; });
   if (!person) return;
@@ -3391,6 +3458,114 @@ function pushRowToCloud(personId) {
 // Retry any rows that failed earlier (Q14)
 function flushDirty() {
   Object.keys(sbDirty).forEach(function (id) { delete sbDirty[id]; pushRowToCloud(id); });
+}
+
+// ═══ TRAINING PLAN SYNC (courses + schedule) ═══════════════
+// Same posture as the matrix: cloud is the shared copy, local is the
+// offline fallback. Writes need the editor role (0005_auth_permissions).
+function loadTrainingFromCloud() {
+  if (!sb) { renderPage(); return; }
+  Promise.all([
+    sb.from('courses').select('*').order('position'),
+    sb.from('schedule_sessions').select('*').order('position')
+  ]).then(function (results) {
+    var cr = results[0], sr = results[1];
+
+    if (!cr.error && cr.data && cr.data.length) {
+      COURSES = cr.data.map(function (r) {
+        return [r.code, r.name_vi, r.axis || 'A', r.tier || '',
+                r.level_from == null ? 0 : r.level_from,
+                r.level_to == null ? 0 : r.level_to,
+                r.hours == null ? 0 : r.hours,
+                r.output_vi || '', r.category == null ? 0 : r.category];
+      });
+      COURSES_EN = cr.data.map(function (r) { return [r.name_en || r.name_vi]; });
+    }
+
+    if (!sr.error && sr.data && sr.data.length) {
+      SCHEDULE = []; SCHEDULE_EN = []; sessionUids = [];
+      sr.data.forEach(function (r) {
+        SCHEDULE.push([r.month, r.letter, r.code || '—',
+          r.title_vi || '', r.type_vi || '', r.audience_vi || '',
+          r.hours == null ? 0 : r.hours,
+          r.owner_vi || '', r.activity_vi || '', r.evidence_vi || '']);
+        SCHEDULE_EN.push([r.title_en || r.title_vi || '', r.type_en || r.type_vi || '',
+          r.audience_en || r.audience_vi || '', r.owner_en || r.owner_vi || '',
+          r.activity_en || r.activity_vi || '', r.evidence_en || r.evidence_vi || '']);
+        sessionUids.push(r.id);
+      });
+      // Remap any legacy index-keyed calendarStatus onto uid keys
+      var remap = {};
+      Object.keys(calendarStatus).forEach(function (k) {
+        var n = parseInt(k, 10);
+        if (!isNaN(n) && sessionUids[n]) remap[sessionUids[n]] = calendarStatus[k];
+        else if (isNaN(n)) remap[k] = calendarStatus[k];
+      });
+      calendarStatus = remap;
+    }
+
+    trainingSnapshot = trainingKey();
+    renderPage();
+  });
+}
+
+function pushTrainingToCloud() {
+  if (!sb || appRole !== 'editor') return;
+  var iso = new Date().toISOString();
+
+  var courseRows = COURSES.map(function (c, i) {
+    var en = (COURSES_EN[i] || []);
+    return {
+      code: c[0], position: i, axis: c[2] || 'A', tier: c[3] || null,
+      level_from: c[4] == null ? null : c[4], level_to: c[5] == null ? null : c[5],
+      hours: c[6] == null ? 0 : c[6], category: c[8] == null ? 0 : c[8],
+      name_vi: c[1] || '—', name_en: en[0] || c[1] || null,
+      output_vi: c[7] || null, output_en: c[7] || null,
+      updated_at: iso
+    };
+  });
+  sb.from('courses').upsert(courseRows, { onConflict: 'code' })
+    .then(function (res) { if (res.error) trainingSyncErr(res.error.message); });
+
+  var sessionRows = SCHEDULE.map(function (s, i) {
+    var en = SCHEDULE_EN[i] || [];
+    return {
+      id: sessionUids[i], position: i, month: s[0], letter: s[1], code: s[2] || null,
+      hours: s[6] == null ? null : s[6],
+      title_vi: s[3] || null, type_vi: s[4] || null, audience_vi: s[5] || null,
+      owner_vi: s[7] || null, activity_vi: s[8] || null, evidence_vi: s[9] || null,
+      title_en: en[0] || s[3] || null, type_en: en[1] || s[4] || null,
+      audience_en: en[2] || s[5] || null, owner_en: en[3] || s[7] || null,
+      activity_en: en[4] || s[8] || null, evidence_en: en[5] || s[9] || null,
+      updated_at: iso
+    };
+  });
+  sb.from('schedule_sessions').upsert(sessionRows, { onConflict: 'id' })
+    .then(function (res) { if (res.error) trainingSyncErr(res.error.message); });
+
+  // Delete cloud rows that no longer exist locally
+  sb.from('courses').select('code').then(function (res) {
+    if (res.error) return;
+    var keep = COURSES.map(function (c) { return c[0]; });
+    var gone = (res.data || []).map(function (r) { return r.code; }).filter(function (c) { return keep.indexOf(c) < 0; });
+    if (gone.length) sb.from('courses').delete().in('code', gone)
+      .then(function (r) { if (r.error) trainingSyncErr(r.error.message); });
+  });
+  sb.from('schedule_sessions').select('id').then(function (res) {
+    if (res.error) return;
+    var keep = sessionUids.slice();
+    var gone = (res.data || []).map(function (r) { return r.id; }).filter(function (id) { return keep.indexOf(id) < 0; });
+    if (gone.length) sb.from('schedule_sessions').delete().in('id', gone)
+      .then(function (r) { if (r.error) trainingSyncErr(r.error.message); });
+  });
+}
+
+function trainingSyncErr(msg) {
+  if (trainingSyncWarned) return;
+  trainingSyncWarned = true;
+  console.warn('Training plan sync failed:', msg);
+  toast(t('Chưa đồng bộ được lên máy chủ — thay đổi đang chỉ lưu cục bộ (cần quyền editor).',
+         'Could not sync to the server — changes are local only (editor role required).'), true);
 }
 
 // ── UI feedback (Q14) ────────────────────────────────────────
@@ -3426,8 +3601,42 @@ function toastDirty() {
 }
 
 // ═══════════════════════════════════════════
-// INIT
+// AUTH (Supabase) — sign-in lives in login.html; this app only
+// restores the session and redirects to the sign-in page if none.
 // ═══════════════════════════════════════════
+
+// Called once a valid session exists (restored or freshly signed in).
+// Resolves the user's role from app_roles, locks the UI for viewers,
+// then pulls the shared data.
+function afterAuth(session) {
+  if (authBooted) return;
+  authBooted = true;
+  var email = (session.user && session.user.email) || '';
+  sb.from('app_roles').select('role').eq('email', email.toLowerCase()).maybeSingle()
+    .then(function (res) {
+      appRole = (res.data && res.data.role) || 'viewer';
+      document.body.classList.toggle('viewer-readonly', appRole !== 'editor');
+      var lab = document.getElementById('userLabel');
+      if (lab) lab.textContent = email + ' · ' + (appRole === 'editor' ? 'editor' : 'viewer (chỉ xem)');
+      var lo = document.getElementById('signOutLink');
+      if (lo) {
+        lo.textContent = t('Đăng xuất', 'Sign out');
+        lo.removeAttribute('href');
+        // Sign out must work even if the server call fails:
+        // clear the local session ourselves, then go to the sign-in page
+        lo.addEventListener('click', function () {
+          var done = function () {
+            Object.keys(localStorage).forEach(function (k) {
+              if (/^sb-.*-auth-token$/.test(k)) localStorage.removeItem(k);
+            });
+            window.location.replace('login.html');
+          };
+          if (window.sb) sb.auth.signOut().then(done, done); else done();
+        });
+      }
+      if (window.sbReady) { loadMatrixFromCloud(); loadRosterFromCloud(); loadTrainingFromCloud(); }
+    });
+}
 
 loadState();
 
@@ -3441,6 +3650,8 @@ document.querySelectorAll('.nav-item').forEach(function(item) {
   item.addEventListener('click', function() { navigate(this.dataset.page); });
 });
 
+
+
 // Org-chart nodes → open the person drawer (right panel, "panel is-open").
 // Delegated, so it survives every re-render.
 document.addEventListener('click', function (e) {
@@ -3449,11 +3660,34 @@ document.addEventListener('click', function (e) {
   openOrgPanel(n.getAttribute('data-org-person'));
 });
 
+// index.html requires a valid Supabase session — without one, the
+// visitor is sent to login.html. (Offline fallback: view-only mode.)
+function anonymousLock() {
+  appRole = 'viewer';
+  document.body.classList.toggle('viewer-readonly', true);
+  var lab = document.getElementById('userLabel');
+  if (lab) lab.textContent = t('Chưa đăng nhập · chỉ xem', 'Not signed in · view only');
+}
+
 setLang(lang);
 
-// Q12: one fetch on load. If the ESM glue already ran, it called us;
-// if not yet (or the CDN failed), this is the fallback path.
-if (window.sbReady) { loadMatrixFromCloud(); loadRosterFromCloud(); }
+// index.html requires a valid Supabase session. The classic script runs
+// before the module "supabase-ready" event fires, so wait for it.
+// Offline fallback after 3s: view-only mode.
+function bootAuth() {
+  sb.auth.getSession().then(function (res) {
+    if (res.data && res.data.session) afterAuth(res.data.session);
+    else window.location.replace('login.html');
+  });
+}
+if (window.sb) {
+  bootAuth();
+} else {
+  window.addEventListener('supabase-ready', bootAuth);
+  setTimeout(function () {
+    if (!window.sb && !authBooted) anonymousLock();
+  }, 3000);
+}
 </script>
 </body>
 </html>

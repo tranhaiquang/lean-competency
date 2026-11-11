@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#2F4B9E">
+<title>Đăng nhập · Lean Competency</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232F4B9E'/><text x='50' y='68' font-size='48' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='800'>L</text></svg>">
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const sb = createClient(
+  'https://asehezvcqzmxvzedsejw.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzZWhlenZjcXpteHZ6ZWRzZWp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5ODAxOTAsImV4cCI6MjEwNjU1NjE5MH0.8UtZQtVso599-isMnT5enpejNg442UzHNhzOqva-IJA'
+);
+
+sb.auth.getSession().then(({ data }) => {
+  if (data.session) window.location.replace('index.html');
+});
+
+const form = document.getElementById('loginForm');
+const btn  = document.getElementById('loginBtn');
+const err  = document.getElementById('loginError');
+
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  err.hidden = true;
+  btn.disabled = true;
+  btn.textContent = 'Đang đăng nhập…';
+
+  sb.auth.signInWithPassword({
+    email: document.getElementById('loginEmail').value.trim().replace(/@email\.com$/i, '') + '@email.com',
+    password: document.getElementById('loginPassword').value
+  }).then(({ error }) => {
+    btn.disabled = false;
+    btn.textContent = 'Đăng nhập';
+    if (error) {
+      err.textContent = 'Email hoặc mật khẩu không đúng.';
+      err.hidden = false;
+      return;
+    }
+    window.location.replace('index.html');
+  }).catch(() => {
+    btn.disabled = false;
+    btn.textContent = 'Đăng nhập';
+    err.textContent = 'Không kết nối được máy chủ.';
+    err.hidden = false;
+  });
+});
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #2F4B9E;
+  --primary-hover: #24407F;
+  --primary-light: #4062B5;
+  --brand-tint: #EAF0FE;
+  --bg: #EFF1F8;
+  --surface: #FFFFFF;
+  --ink: #17202B;
+  --ink-muted: #64717F;
+  --ink-dim: #B7BFC8;
+  --font: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid #E3E1EE;
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(23,32,43,.14);
+  width: 100%;
+  max-width: 380px;
+  padding: 28px 26px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.mark {
+  width: 44px; height: 44px; border-radius: 11px;
+  background: var(--primary); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 800;
+}
+h1 { font-size: 21px; letter-spacing: -0.01em; }
+.lead { font-size: 12.5px; color: var(--ink-muted); margin-top: -8px; }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 11px; font-weight: 700; color: var(--ink-muted); }
+.field input {
+  border: 1px solid #E3E1EE;
+  background: #FAFBFF;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--ink);
+}
+.field input:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 3px var(--brand-tint); }
+
+#loginError {
+  background: #FBEADC; border: 1px solid #F5A66E; color: #A0551F;
+  font-size: 12.5px; padding: 8px 10px; border-radius: 8px;
+}
+#loginBtn {
+  background: var(--primary); color: #fff; border: 0;
+  border-radius: 9px; padding: 11px;
+  font: 700 14px var(--font); cursor: pointer;
+}
+#loginBtn:hover { background: var(--primary-hover); }
+#loginBtn:disabled { opacity: .65; cursor: default; }
+.foot { font-size: 11px; color: var(--ink-dim); text-align: center; }
+.backlink { color: var(--primary); text-decoration: none; font-weight: 600; }
+.backlink:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<main class="card">
+  <div class="mark">L</div>
+  <h1>Lean Competency</h1>
+  <p class="lead">Nhập mã nhân viên để tiếp tục</p>
+
+  <form id="loginForm" autocomplete="on">
+    <div class="field">
+      <label for="loginEmail">Mã nhân viên</label>
+      <input id="loginEmail" type="text" inputmode="numeric" placeholder="23040301" autocomplete="username" required>
+    </div>
+    <div class="field" style="margin-top:12px;">
+      <label for="loginPassword">Mật khẩu</label>
+      <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password" required>
+    </div>
+
+    <div id="loginError" role="alert" hidden></div>
+    <button id="loginBtn" type="submit" style="margin-top:14px;">Đăng nhập</button>
+  </form>
+
+  <p class="foot"><a class="backlink" href="index.html">← Quay lại app</a></p>
+</main>
+
+</body>
+</html>
