@@ -2685,10 +2685,13 @@ function renderCalendar(el) {
     // Session A = week 2 (days 8-14), Session B = week 4 (days 22-28)
     monthSessions.forEach(function(ms) {
       var letter = ms.data[1];
-      var isA = letter === 'A' && d >= 8 && d <= 14 && d % 7 === 1; // Mon of week 2
-      var isB = letter === 'B' && d >= 22 && d <= 28 && d % 7 === 1; // Mon of week 4
-      if (isA || isB) {
-        var cls = isA ? 'session-a' : 'session-b';
+      var day = +ms.data[10];
+      var onDay = day >= 1 && day <= daysInMonth;
+      var isA = !onDay && letter === 'A' && d >= 8 && d <= 14 && d % 7 === 1; // Mon of week 2
+      var isB = !onDay && letter === 'B' && d >= 22 && d <= 28 && d % 7 === 1; // Mon of week 4
+      var onPickedDay = onDay && d === day;
+      if (isA || isB || onPickedDay) {
+        var cls = letter === 'B' ? 'session-b' : 'session-a';
         var title = lang === 'vi' ? ms.data[3] : ms.en[0];
         html += '<div class="cal-day-badge '+cls+'" onclick="calSelectedSession=\''+ms.uid+'\';renderPage();" title="'+title+'">'+letter+' · '+title.substring(0,20)+'</div>';
       }
@@ -2708,7 +2711,7 @@ function renderCalendar(el) {
     var isActive = calSelectedSession === ms.uid;
     var cls = letter === 'B' ? ' type-b' : '';
     html += '<button class="cal-session-card'+cls+(isActive?' active':'')+'" onclick="calSelectedSession=\''+ms.uid+'\';renderPage();">';
-    html += '<div class="session-label">'+letter+' · '+t('Tuần','Week')+' '+(letter==='A'?'2':'4')+'</div>';
+    html += '<div class="session-label">'+letter+' · '+(ms.data[10] ? t('Ngày','Day')+' '+ms.data[10] : t('Tuần','Week')+' '+(letter==='A'?'2':'4'))+'</div>';
     html += '<div class="session-title">'+title+'</div>';
     html += '<div class="session-meta">'+t('Chủ trì','Owner')+': '+owner+'</div>';
     html += '</button>';
@@ -2722,6 +2725,7 @@ function renderCalendar(el) {
   if (calSelectedSession !== null && si >= 0) {
     var ms = SCHEDULE[si];
     var en = SCHEDULE_EN[si] || [];
+    var dayStr = ms[10] ? new Date(2026, ms[0]-1, ms[10]).toLocaleDateString(lang==='vi'?'vi-VN':'en-GB', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' }) : t('Chưa xếp', 'Not set');
     var title = lang === 'vi' ? ms[3] : en[0];
     var type = lang === 'vi' ? ms[4] : en[1];
     var audience = lang === 'vi' ? ms[5] : en[2];
@@ -2738,6 +2742,7 @@ function renderCalendar(el) {
     html += '<h3 style="margin:0;">'+ms[1]+' · '+title+'</h3>';
     html += '<span class="cal-status '+statusCls+'">'+statusLabel+'</span></div>';
     html += '<div class="cal-detail-row"><strong>'+t('Loại buổi','Session type')+':</strong> '+type+'</div>';
+    html += '<div class="cal-detail-row"><strong>'+t('Ngày','Date')+':</strong> '+dayStr+'</div>';
     html += '<div class="cal-detail-row"><strong>'+t('Đối tượng','Audience')+':</strong> '+audience+' ('+ms[6]+'h)</div>';
     html += '<div class="cal-detail-row"><strong>'+t('Chủ trì','Owner')+':</strong> '+owner+'</div>';
     html += '<div class="cal-detail-row" style="margin-top:10px;"><strong>'+t('Hoạt động giữa buổi','Between-session activity')+':</strong></div>';
@@ -2765,6 +2770,7 @@ function renderCalendar(el) {
     html += '<fieldset style="margin-top:14px;border:1px solid var(--row-border);border-radius:6px;padding:10px 12px;">';
     html += '<legend style="font-size:10.5px;font-weight:700;color:var(--ink-muted);padding:0 6px;">' + t('Chỉnh sửa buổi', 'Edit session') + '</legend>';
     html += inp(t('Tháng', 'Month'), ms[0], 'type="number" min="1" max="12" onchange="SCHEDULE[' + i + '][0]=+this.value;saveState();renderPage();"');
+    html += inp(t('Ngày trong tháng', 'Day of month'), ms[10] || '', 'type="number" min="1" max="31" placeholder="' + t('Tuần 2 / Tuần 4 (mặc định)','Week 2 / week 4 (default)') + '" onchange="SCHEDULE[' + i + '][10]=this.value?+this.value:&quot;&quot;;saveState();renderPage();"');
     html += inp(t('Buổi', 'Session letter (A/B)'), ms[1], 'onchange="SCHEDULE[' + i + '][1]=(this.value||&quot;A&quot;).toUpperCase();saveState();renderPage();"');
     html += inp(t('Mã khóa', 'Course code'), ms[2], 'onchange="SCHEDULE[' + i + '][2]=this.value;saveState();"');
     html += inp(t('Tiêu đề', 'Title'), title, 'onchange="' + mirror(i, 0, 3) + '"');
